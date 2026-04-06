@@ -20,5 +20,6 @@ class Room extends Model
         'capacity',
         'price_per_month',
         'status',
+        'image',
     ];
 }

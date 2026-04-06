@@ -30,3 +30,4 @@ Route::middleware(['auth'])->group(function () {
     // Rooms show (must come AFTER create to prevent 'create' being treated as {room})
     Route::get('/rooms/{room}', [RoomController::class, 'show'])->name('rooms.show');
 });
+Route::get('/', fn() => view('welcome'))->name('home');

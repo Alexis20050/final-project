@@ -7,7 +7,7 @@
         <div class="max-w-7xl mx-auto sm:px-6 lg:px-8">
             <div class="bg-white overflow-hidden shadow-sm sm:rounded-lg">
                 <div class="p-6">
-                    <form method="POST" action="{{ route('rooms.update', $room) }}" class="space-y-6">
+                    <form method="POST" action="{{ route('rooms.update', $room) }}" class="space-y-6" enctype="multipart/form-data">
                         @csrf
                         @method('PUT')
 
@@ -52,6 +52,20 @@
                                 <option value="maintenance" {{ old('status', $room->status) == 'maintenance' ? 'selected' : '' }}>Maintenance</option>
                             </select>
                             <x-input-error :messages="$errors->get('status')" class="mt-2" />
+                        </div>
+
+                        {{-- Image Upload --}}
+                        <div>
+                            <x-input-label for="image" :value="__('Room Image')" />
+                            @if($room->image)
+                                <div class="mb-3">
+                                    <img src="{{ asset('storage/' . $room->image) }}" alt="Current image" style="max-width: 200px; border-radius: 8px; border: 1px solid #ddd;">
+                                    <p class="text-sm text-gray-500 mt-1">Current image – upload a new one to replace.</p>
+                                </div>
+                            @endif
+                            <input type="file" name="image" id="image" accept="image/jpeg,image/png,image/jpg,image/webp" class="mt-1 block w-full border-gray-300 focus:border-indigo-500 focus:ring-indigo-500 rounded-md shadow-sm">
+                            <p class="text-sm text-gray-500 mt-1">Optional. Max 2MB, JPG/PNG/WEBP. Leave empty to keep current image.</p>
+                            <x-input-error :messages="$errors->get('image')" class="mt-2" />
                         </div>
 
                         <div class="flex items-center justify-end space-x-3">
