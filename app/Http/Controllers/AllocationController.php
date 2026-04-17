@@ -9,10 +9,7 @@ use Illuminate\Http\Request;
 
 class AllocationController extends Controller
 {
-    public function __construct()
-    {
-        $this->middleware('admin');
-    }
+    // No constructor – middleware is applied in routes/web.php
 
     public function index()
     {
@@ -59,5 +56,26 @@ class AllocationController extends Controller
         $allocation->update(['end_date' => now(), 'status' => 'completed']);
         $allocation->room->update(['status' => 'available']);
         return redirect()->route('allocations.index')->with('success', 'Allocation ended.');
+    }
+
+    /**
+     * Student leaves the room (ends their own allocation).
+     */
+    public function leave(Allocation $allocation)
+    {
+        // Ensure the logged-in user owns this allocation and it's active
+        if ($allocation->user_id !== auth()->id() || $allocation->status !== 'active') {
+            abort(403, 'Unauthorized action.');
+        }
+
+        $allocation->update([
+            'end_date' => now(),
+            'status' => 'completed'
+        ]);
+
+        // Free the room
+        $allocation->room->update(['status' => 'available']);
+
+        return redirect()->route('dashboard')->with('success', 'You have left the room. It is now available for others.');
     }
 }

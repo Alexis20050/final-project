@@ -74,6 +74,8 @@
             padding:10px 16px;border-top:1px solid var(--border);
             display:flex;align-items:center;justify-content:space-between;
             background:var(--surface-2);
+            flex-wrap:wrap;
+            gap:8px;
         }
         .rc-view{font-size:12.5px;color:var(--accent-tx);text-decoration:none;font-weight:500;}
         .rc-view:hover{text-decoration:underline;}
@@ -85,8 +87,33 @@
         }
         .rc-btn.edit{background:var(--surface);color:var(--text-2);}
         .rc-btn.edit:hover{background:var(--surface-2);color:var(--text);}
-        .rc-btn.del{background:transparent;color:var(--red);border-color:transparent;}
-        .rc-btn.del:hover{background:var(--red-bg);}
+        .rc-btn.archive{
+            background:var(--amber-bg);
+            color:var(--amber);
+            border-color:var(--border);
+        }
+        .rc-btn.archive:hover{
+            background:var(--amber);
+            color:#fff;
+        }
+        .rc-btn.restore{
+            background:var(--green-bg);
+            color:var(--green);
+            border-color:var(--border);
+        }
+        .rc-btn.restore:hover{
+            background:var(--green);
+            color:#fff;
+        }
+        .rc-btn.request{
+            background:var(--green-bg);
+            color:var(--green);
+            border:1px solid var(--border);
+        }
+        .rc-btn.request:hover{
+            background:var(--green);
+            color:#fff;
+        }
 
         /* Empty */
         .empty{
@@ -108,13 +135,23 @@
     </div>
     @endif
 
+    @if(session('error'))
+    <div class="alert-ok" style="background:var(--red-bg);color:var(--red);border-color:rgba(224,36,36,.2);">
+        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/></svg>
+        {{ session('error') }}
+    </div>
+    @endif
+
     <!-- Filters – Role‑based -->
     <div class="filters">
         @if(auth()->user()->isAdmin() || auth()->user()->isStaff())
-            <a href="{{ route('rooms.index') }}" class="chip {{ !request('status') ? 'on' : '' }}">All rooms</a>
+            <a href="{{ route('rooms.index') }}" class="chip {{ !request('status') && !request('archived') ? 'on' : '' }}">All rooms</a>
             <a href="{{ route('rooms.index', ['status' => 'available']) }}" class="chip {{ request('status') === 'available' ? 'on' : '' }}">Available</a>
             <a href="{{ route('rooms.index', ['status' => 'occupied']) }}" class="chip {{ request('status') === 'occupied' ? 'on' : '' }}">Occupied</a>
             <a href="{{ route('rooms.index', ['status' => 'maintenance']) }}" class="chip {{ request('status') === 'maintenance' ? 'on' : '' }}">Maintenance</a>
+            @if(auth()->user()->isAdmin())
+                <a href="{{ route('rooms.index', ['archived' => 1]) }}" class="chip {{ request('archived') == 1 ? 'on' : '' }}">Archived Rooms</a>
+            @endif
         @else
             <!-- Students see only available rooms, so no filter needed -->
             <span class="chip on">Available rooms</span>
@@ -157,13 +194,30 @@
             </div>
             <div class="rc-foot">
                 <a href="{{ route('rooms.show', $room) }}" class="rc-view">View details →</a>
+                
+                @auth
+                    @if(auth()->user()->isResident() && $room->status === 'available' && !$room->archived)
+                        <form method="POST" action="{{ route('rooms.request', $room) }}" class="inline">
+                            @csrf
+                            <button type="submit" class="rc-btn request">Request this room</button>
+                        </form>
+                    @endif
+                @endauth
+
                 @if(auth()->user()->isAdmin())
                 <div class="rc-actions">
                     <a href="{{ route('rooms.edit', $room) }}" class="rc-btn edit">Edit</a>
-                    <form method="POST" action="{{ route('rooms.destroy', $room) }}" onsubmit="return confirm('Delete room {{ $room->room_number }}?')">
-                        @csrf @method('DELETE')
-                        <button type="submit" class="rc-btn del">Delete</button>
-                    </form>
+                    @if($room->archived)
+                        <form method="POST" action="{{ route('rooms.restore', $room) }}" class="inline" onsubmit="return confirm('Restore this room? It will become visible again.');">
+                            @csrf @method('PATCH')
+                            <button type="submit" class="rc-btn restore">Restore</button>
+                        </form>
+                    @else
+                        <form method="POST" action="{{ route('rooms.archive', $room) }}" class="inline" onsubmit="return confirm('Archive this room? It will be hidden from students and staff.');">
+                            @csrf @method('PATCH')
+                            <button type="submit" class="rc-btn archive">Archive</button>
+                        </form>
+                    @endif
                 </div>
                 @endif
             </div>

@@ -303,6 +303,7 @@
             @auth @if(auth()->user()->isAdmin())
             <a href="{{ route('rooms.create') }}" class="nav-link {{ request()->routeIs('rooms.create') ? 'active' : '' }}">Add Room</a>
             <a href="{{ route('applications.index') }}" class="nav-link {{ request()->routeIs('applications.*') ? 'active' : '' }}">Applications</a>
+            <a href="{{ route('admin.users.index') }}" class="nav-link {{ request()->routeIs('admin.users.*') ? 'active' : '' }}">User Management</a>
             @endif @endauth
             <a href="{{ route('about') }}" class="nav-link {{ request()->routeIs('about') ? 'active' : '' }}">About</a>
         </div>
@@ -361,6 +362,7 @@
     @auth @if(auth()->user()->isAdmin())
     <a href="{{ route('rooms.create') }}" class="mobile-link">Add Room</a>
     <a href="{{ route('applications.index') }}" class="mobile-link">Applications</a>
+    <a href="{{ route('admin.users.index') }}" class="mobile-link">User Management</a>
     @endif @endauth
     <a href="{{ route('about') }}" class="mobile-link">About</a>
     <div style="height:1px;background:var(--border);margin:8px 0;"></div>
@@ -393,4 +395,4 @@
 </main>
 
 </body>
-</html>
+</html> 

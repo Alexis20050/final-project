@@ -39,6 +39,9 @@ class User extends Authenticatable
         return $this->hasMany(Allocation::class);
     }
 
+    /**
+     * Get the user's current active allocation (if any).
+     */
     public function activeAllocation()
     {
         return $this->hasOne(Allocation::class)->where('status', 'active');
@@ -66,6 +69,14 @@ class User extends Authenticatable
     public function currentRoom()
     {
         return $this->activeAllocation ? $this->activeAllocation->room : null;
+    }
+
+    /**
+     * Get the current room number as a string (or null).
+     */
+    public function currentRoomNumber()
+    {
+        return $this->currentRoom()?->room_number;
     }
 
     /**

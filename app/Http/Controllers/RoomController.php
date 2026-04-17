@@ -3,6 +3,8 @@
 namespace App\Http\Controllers;
 
 use App\Models\Room;
+use App\Models\RoomApplication;
+use App\Models\Allocation;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
 
@@ -12,6 +14,14 @@ class RoomController extends Controller
     {
         $user = auth()->user();
         $query = Room::query();
+
+        // Admin can filter archived rooms (if ?archived=1)
+        if ($user && $user->isAdmin() && $request->boolean('archived')) {
+            $query->where('archived', true);
+        } elseif (!$user || !$user->isAdmin()) {
+            // Non‑admin users never see archived rooms
+            $query->where('archived', false);
+        }
 
         // Apply status filter if provided (admin/staff can filter any status)
         if ($request->filled('status') && in_array($request->status, ['available', 'occupied', 'maintenance'])) {
@@ -55,9 +65,23 @@ class RoomController extends Controller
     {
         $user = auth()->user();
 
-        // Students (residents) cannot view rooms that are not available
-        if ($user && $user->isResident() && $room->status !== 'available') {
-            abort(404, 'Room not found.');
+        // Block non‑admin users from seeing archived rooms
+        if (!$user->isAdmin() && $room->archived) {
+            abort(404);
+        }
+
+        // Students (residents) can only view available rooms OR their own allocated room
+        if ($user && $user->isResident()) {
+            // Get the student's active allocation (if any)
+            $activeAllocation = Allocation::where('user_id', $user->id)
+                ->where('status', 'active')
+                ->first();
+            $isTheirRoom = $activeAllocation && $activeAllocation->room_id === $room->id;
+
+            // Allow if it's their own room OR the room is available
+            if (!$isTheirRoom && $room->status !== 'available') {
+                abort(404, 'Room not found.');
+            }
         }
 
         return view('rooms.show', compact('room'));
@@ -92,12 +116,57 @@ class RoomController extends Controller
         return redirect()->route('rooms.index')->with('success', 'Room updated.');
     }
 
-    public function destroy(Room $room)
+    /**
+     * Archive a room (soft hide – hidden from students/staff).
+     */
+    public function archive(Room $room)
     {
-        if ($room->image && Storage::disk('public')->exists($room->image)) {
-            Storage::disk('public')->delete($room->image);
+        $room->update(['archived' => true]);
+        return redirect()->route('rooms.index')->with('success', 'Room archived.');
+    }
+
+    /**
+     * Restore an archived room (make it visible again).
+     */
+    public function restore(Room $room)
+    {
+        $room->update(['archived' => false]);
+        return redirect()->route('rooms.index')->with('success', 'Room restored.');
+    }
+
+    /**
+     * Handle a direct room request from a student.
+     */
+    public function requestRoom(Room $room)
+    {
+        $user = auth()->user();
+
+        // Only residents can request
+        if (!$user->isResident()) {
+            abort(403, 'Only students can request rooms.');
         }
-        $room->delete();
-        return redirect()->route('rooms.index')->with('success', 'Room deleted.');
+
+        // Only available rooms can be requested
+        if ($room->status !== 'available') {
+            return back()->with('error', 'This room is not available.');
+        }
+
+        // Check if user already has a pending application
+        $existing = RoomApplication::where('user_id', $user->id)
+            ->where('status', 'pending')
+            ->first();
+        if ($existing) {
+            return back()->with('error', 'You already have a pending room request. Please wait for it to be processed.');
+        }
+
+        // Create the application
+        RoomApplication::create([
+            'user_id' => $user->id,
+            'room_id' => $room->id,
+            'preferred_move_in' => now()->addDays(7)->toDateString(),
+            'status' => 'pending',
+        ]);
+
+        return redirect()->route('applications.my')->with('success', 'Room request submitted. An administrator will review it.');
     }
 }
