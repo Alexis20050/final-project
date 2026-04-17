@@ -302,6 +302,7 @@
             <a href="{{ route('rooms.index') }}" class="nav-link {{ request()->routeIs('rooms.*') && !request()->routeIs('rooms.create') ? 'active' : '' }}">Rooms</a>
             @auth @if(auth()->user()->isAdmin())
             <a href="{{ route('rooms.create') }}" class="nav-link {{ request()->routeIs('rooms.create') ? 'active' : '' }}">Add Room</a>
+            <a href="{{ route('applications.index') }}" class="nav-link {{ request()->routeIs('applications.*') ? 'active' : '' }}">Applications</a>
             @endif @endauth
             <a href="{{ route('about') }}" class="nav-link {{ request()->routeIs('about') ? 'active' : '' }}">About</a>
         </div>
@@ -359,6 +360,7 @@
     <a href="{{ route('rooms.index') }}" class="mobile-link {{ request()->routeIs('rooms.*') ? 'active' : '' }}">Rooms</a>
     @auth @if(auth()->user()->isAdmin())
     <a href="{{ route('rooms.create') }}" class="mobile-link">Add Room</a>
+    <a href="{{ route('applications.index') }}" class="mobile-link">Applications</a>
     @endif @endauth
     <a href="{{ route('about') }}" class="mobile-link">About</a>
     <div style="height:1px;background:var(--border);margin:8px 0;"></div>

@@ -1,4 +1,4 @@
-<x-app-layout>
+﻿<x-app-layout>
     <x-slot name="header">
         <h2 class="page-header-title">Dashboard</h2>
     </x-slot>
@@ -145,11 +145,6 @@
     </style>
 
     @php
-        $total       = \App\Models\Room::count();
-        $available   = \App\Models\Room::where('status','available')->count();
-        $occupied    = \App\Models\Room::where('status','occupied')->count();
-        $maintenance = \App\Models\Room::where('status','maintenance')->count();
-        $rate = $total > 0 ? round(($occupied / $total) * 100) : 0;
         $hour = now()->hour;
         $greeting = $hour < 12 ? 'Good morning' : ($hour < 17 ? 'Good afternoon' : 'Good evening');
     @endphp

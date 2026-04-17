@@ -108,19 +108,24 @@
     </div>
     @endif
 
-    <!-- Filters -->
+    <!-- Filters – Role‑based -->
     <div class="filters">
-        <a href="{{ route('rooms.index') }}" class="chip {{ !request('status') ? 'on' : '' }}">All rooms</a>
-        <a href="{{ route('rooms.index', ['status' => 'available']) }}" class="chip {{ request('status') === 'available' ? 'on' : '' }}">Available</a>
-        <a href="{{ route('rooms.index', ['status' => 'occupied']) }}" class="chip {{ request('status') === 'occupied' ? 'on' : '' }}">Occupied</a>
-        <a href="{{ route('rooms.index', ['status' => 'maintenance']) }}" class="chip {{ request('status') === 'maintenance' ? 'on' : '' }}">Maintenance</a>
+        @if(auth()->user()->isAdmin() || auth()->user()->isStaff())
+            <a href="{{ route('rooms.index') }}" class="chip {{ !request('status') ? 'on' : '' }}">All rooms</a>
+            <a href="{{ route('rooms.index', ['status' => 'available']) }}" class="chip {{ request('status') === 'available' ? 'on' : '' }}">Available</a>
+            <a href="{{ route('rooms.index', ['status' => 'occupied']) }}" class="chip {{ request('status') === 'occupied' ? 'on' : '' }}">Occupied</a>
+            <a href="{{ route('rooms.index', ['status' => 'maintenance']) }}" class="chip {{ request('status') === 'maintenance' ? 'on' : '' }}">Maintenance</a>
+        @else
+            <!-- Students see only available rooms, so no filter needed -->
+            <span class="chip on">Available rooms</span>
+        @endif
     </div>
 
     <!-- Grid -->
     <div class="rg">
         @forelse($rooms as $room)
         <div class="rc">
-            <!-- ========== IMAGE THUMBNAIL (ADDED) ========== -->
+            <!-- ========== IMAGE THUMBNAIL ========== -->
             @if($room->image)
                 <img src="{{ asset('storage/' . $room->image) }}" alt="Room {{ $room->room_number }}" style="width:100%; height:140px; object-fit:cover; border-bottom:1px solid var(--border);">
             @else
@@ -128,7 +133,7 @@
                     <svg width="32" height="32" fill="none" stroke="currentColor" viewBox="0 0 24 24" style="color:var(--text-3);"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
                 </div>
             @endif
-            <!-- =========================================== -->
+            <!-- =================================== -->
             <div class="rc-head">
                 <div>
                     <div class="rc-num">{{ $room->room_number }}</div>
@@ -166,11 +171,15 @@
         @empty
         <div class="empty">
             <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M3 10.5L12 3l9 7.5V20a1 1 0 01-1 1H5a1 1 0 01-1-1v-9.5z"/></svg>
-            <p>No rooms found{{ request('status') ? ' with status "'.request('status').'"' : '' }}.</p>
+            @if(auth()->user()->isResident())
+                <p>No available rooms at the moment. Please check back later.</p>
+            @else
+                <p>No rooms found{{ request('status') ? ' with status "'.request('status').'"' : '' }}.</p>
+            @endif
             @if(auth()->user()->isAdmin())
-            <a href="{{ route('rooms.create') }}" style="display:inline-flex;align-items:center;gap:6px;padding:8px 16px;background:var(--accent);color:#fff;border-radius:var(--r);font-size:13px;font-weight:500;text-decoration:none;">
-                + Add your first room
-            </a>
+                <a href="{{ route('rooms.create') }}" style="display:inline-flex;align-items:center;gap:6px;padding:8px 16px;background:var(--accent);color:#fff;border-radius:var(--r);font-size:13px;font-weight:500;text-decoration:none;">
+                    + Add your first room
+                </a>
             @endif
         </div>
         @endforelse

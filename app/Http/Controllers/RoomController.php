@@ -10,10 +10,19 @@ class RoomController extends Controller
 {
     public function index(Request $request)
     {
+        $user = auth()->user();
         $query = Room::query();
+
+        // Apply status filter if provided (admin/staff can filter any status)
         if ($request->filled('status') && in_array($request->status, ['available', 'occupied', 'maintenance'])) {
             $query->where('status', $request->status);
         }
+
+        // Students (residents) can only see available rooms
+        if ($user && $user->isResident()) {
+            $query->where('status', 'available');
+        }
+
         $rooms = $query->latest()->paginate(12);
         return view('rooms.index', compact('rooms'));
     }
@@ -44,6 +53,13 @@ class RoomController extends Controller
 
     public function show(Room $room)
     {
+        $user = auth()->user();
+
+        // Students (residents) cannot view rooms that are not available
+        if ($user && $user->isResident() && $room->status !== 'available') {
+            abort(404, 'Room not found.');
+        }
+
         return view('rooms.show', compact('room'));
     }
 
