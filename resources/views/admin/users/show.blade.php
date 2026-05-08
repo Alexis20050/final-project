@@ -59,14 +59,8 @@
             <div class="detail-label">Email</div>
             <div class="detail-value">{{ $user->email }}</div>
         </div>
-        <div class="detail-row">
-            <div class="detail-label">Student ID</div>
-            <div class="detail-value">{{ $user->student_id ?? '—' }}</div>
-        </div>
-        <div class="detail-row">
-            <div class="detail-label">Phone</div>
-            <div class="detail-value">{{ $user->phone ?? '—' }}</div>
-        </div>
+        {{-- Student ID row removed --}}
+        {{-- Phone row removed --}}
         <div class="detail-row">
             <div class="detail-label">Role</div>
             <div class="detail-value">{{ ucfirst($user->role) }}</div>

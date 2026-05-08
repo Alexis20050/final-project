@@ -65,11 +65,11 @@ class MaintenanceRequestController extends Controller
             'image' => $imagePath,
         ]);
 
-        // Update room status to 'maintenance'
+        // 🔥 CRITICAL: Update room status to 'maintenance'
         $room = Room::find($request->room_id);
         if ($room && $room->status !== 'maintenance') {
             $room->status = 'maintenance';
-            $room->save(); // use save() to be explicit
+            $room->save();
             Log::info("Room {$room->id} status changed to maintenance due to request #{$maintenanceRequest->id}");
         } else {
             Log::warning("Room {$room->id} status was already maintenance or not found.");
@@ -112,6 +112,12 @@ class MaintenanceRequestController extends Controller
             $newRoomStatus = $activeAllocation ? 'occupied' : 'available';
             $room->update(['status' => $newRoomStatus]);
             Log::info("Room {$room->id} status changed to {$newRoomStatus} after resolving request #{$maintenanceRequest->id}");
+        } elseif ($newStatus === 'cancelled') {
+            $activeAllocation = Allocation::where('room_id', $room->id)
+                ->where('status', 'active')
+                ->exists();
+            $newRoomStatus = $activeAllocation ? 'occupied' : 'available';
+            $room->update(['status' => $newRoomStatus]);
         } elseif ($newStatus === 'in_progress' && $oldStatus === 'pending') {
             if ($room->status !== 'maintenance') {
                 $room->update(['status' => 'maintenance']);

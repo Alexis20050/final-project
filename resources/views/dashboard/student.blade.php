@@ -132,11 +132,6 @@
             border-radius:var(--r);
             text-decoration:none;
             font-size:12px;
-            transition:all 0.2s;
-        }
-        .btn-outline:hover {
-            background:var(--surface-2);
-            color:var(--text);
         }
         .btn-danger-outline {
             border:1px solid var(--red);
@@ -219,13 +214,8 @@
                     <div class="room-info-item"><div class="room-info-label">Move-in Date</div><div class="room-info-value">{{ \Carbon\Carbon::parse($activeAllocation->start_date)->format('M d, Y') }}</div></div>
                     <div class="room-info-item"><div class="room-info-label">Status</div><div class="room-info-value"><span class="badge occupied">Occupied</span></div></div>
                 </div>
-                <div style="flex-basis:100%; margin-top:12px; display: flex; gap: 12px; flex-wrap: wrap;">
+                <div style="flex-basis:100%; margin-top:12px;">
                     <a href="{{ route('rooms.show', $activeAllocation->room) }}" class="btn-primary">View full details →</a>
-                    <form method="POST" action="{{ route('allocations.leave', $activeAllocation) }}" onsubmit="return confirm('Are you sure you want to leave this room? Your allocation will end immediately.');">
-                        @csrf
-                        @method('PATCH')
-                        <button type="submit" class="btn-danger-outline">Leave this room</button>
-                    </form>
                 </div>
             </div>
         </div>

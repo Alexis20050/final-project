@@ -8,6 +8,15 @@
         </div>
     </x-slot>
 
+    {{-- 🔴 Error alert – shows when the controller passes back errors (e.g. duplicate request, already allocated) --}}
+    @if($errors->any())
+        <div style="background:var(--red-bg); color:var(--red); padding:12px 16px; border-radius:var(--r); margin-bottom:16px; font-size:14px;">
+            @foreach($errors->all() as $error)
+                <p style="margin:0;">⚠️ {{ $error }}</p>
+            @endforeach
+        </div>
+    @endif
+
     <style>
         .badge {
             display:inline-flex;

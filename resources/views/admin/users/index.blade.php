@@ -9,8 +9,6 @@
     </x-slot>
 
     <style>
-        /* ... (keep all existing CSS from previous version, unchanged) ... */
-        /* I'll keep the CSS as before – no changes needed */
         .card {
             background: var(--surface);
             border: 1px solid var(--border);
@@ -255,7 +253,7 @@
         <div class="search-section">
             <div class="search-form">
                 <div class="search-input-wrapper">
-                    <input type="text" placeholder="Search by name, email, or student ID..." 
+                    <input type="text" placeholder="Search by name or email..." 
                            x-model="searchTerm" class="search-input" :class="{ 'loading': loading }">
                 </div>
                 <button type="button" @click="fetchUsers()" class="btn-search">
@@ -281,8 +279,7 @@
                     <tr>
                         <th>Name</th>
                         <th>Email</th>
-                        <th>Student ID</th>
-                        <th>Phone</th>
+                        {{-- Student ID and Phone removed --}}
                         <th>Current Room</th>
                         <th>Actions</th>
                     </tr>
@@ -295,8 +292,7 @@
                                 <div class="text-xs text-gray-500 dark:text-gray-400" x-text="'Joined ' + new Date(user.created_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })"></div>
                             </td>
                             <td x-text="user.email"></td>
-                            <td x-text="user.student_id || '—'"></td>
-                            <td x-text="user.phone || '—'"></td>
+                            {{-- Removed Student ID and Phone cells --}}
                             <td>
                                 <span x-show="user.active_allocation && user.active_allocation.room" class="badge-room" x-text="'Room ' + user.active_allocation.room.room_number"></span>
                                 <span x-show="!user.active_allocation || !user.active_allocation.room" class="badge-none">Not allocated</span>
@@ -312,7 +308,8 @@
                         </tr>
                     </template>
                     <tr x-show="users.length === 0 && !loading">
-                        <td colspan="6" class="empty-state">
+                        {{-- colspan changed from 6 to 4 because we removed two columns --}}
+                        <td colspan="4" class="empty-state">
                             <span x-show="searchTerm">No residents found matching <strong x-text="searchTerm"></strong>.</span>
                             <span x-show="!searchTerm">No residents found. <br><span class="text-sm">New residents will appear here after registration.</span></span>
                             <div class="mt-2" x-show="searchTerm">
@@ -321,7 +318,7 @@
                         </td>
                     </tr>
                     <tr x-show="loading">
-                        <td colspan="6" class="empty-state">
+                        <td colspan="4" class="empty-state">
                             <div style="display:flex; justify-content:center; align-items:center; gap:8px;">
                                 <div class="loading-indicator"></div>
                                 <span>Loading...</span>

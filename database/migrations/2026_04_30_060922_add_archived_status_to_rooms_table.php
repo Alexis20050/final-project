@@ -9,14 +9,14 @@ return new class extends Migration
     public function up()
     {
         Schema::table('rooms', function (Blueprint $table) {
-            $table->boolean('archived')->default(false)->after('status');
+            $table->enum('status', ['available', 'occupied', 'maintenance', 'archived'])->default('available')->change();
         });
     }
 
     public function down()
     {
         Schema::table('rooms', function (Blueprint $table) {
-            $table->dropColumn('archived');
+            $table->enum('status', ['available', 'occupied', 'maintenance'])->default('available')->change();
         });
     }
 };

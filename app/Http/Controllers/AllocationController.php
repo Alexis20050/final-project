@@ -6,11 +6,11 @@ use App\Models\Room;
 use App\Models\User;
 use App\Models\Allocation;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Database\QueryException;
 
 class AllocationController extends Controller
 {
-    // No constructor – middleware is applied in routes/web.php
-
     public function index()
     {
         $allocations = Allocation::with('user', 'room')->latest()->paginate(20);
@@ -27,14 +27,25 @@ class AllocationController extends Controller
     public function store(Request $request)
     {
         $validated = $request->validate([
-            'user_id' => 'required|exists:users,id',
-            'room_id' => 'required|exists:rooms,id',
+            'user_id'    => 'required|exists:users,id',
+            'room_id'    => 'required|exists:rooms,id',
             'start_date' => 'required|date',
         ]);
 
-        $active = Allocation::where('user_id', $validated['user_id'])->where('status', 'active')->first();
-        if ($active) {
+        // 1. Prevent double allocation for the same user
+        $userActive = Allocation::where('user_id', $validated['user_id'])
+                        ->where('status', 'active')
+                        ->first();
+        if ($userActive) {
             return back()->withErrors(['msg' => 'Student already has an active allocation.']);
+        }
+
+        // 2. Check if room is already occupied by another active resident
+        $roomActive = Allocation::where('room_id', $validated['room_id'])
+                        ->where('status', 'active')
+                        ->exists();
+        if ($roomActive) {
+            return back()->withErrors(['msg' => 'This room already has an active resident.']);
         }
 
         $room = Room::find($validated['room_id']);
@@ -42,15 +53,32 @@ class AllocationController extends Controller
             return back()->withErrors(['msg' => 'Room is not available.']);
         }
 
-        $validated['status'] = 'active';
-        $validated['created_by'] = auth()->id();
-        Allocation::create($validated);
+        try {
+            DB::transaction(function () use ($validated, $room) {
+                Allocation::create([
+                    'user_id'    => $validated['user_id'],
+                    'room_id'    => $validated['room_id'],
+                    'start_date' => $validated['start_date'],
+                    'status'     => 'active',
+                    'created_by' => auth()->id(),
+                ]);
 
-        $room->update(['status' => 'occupied']);
+                $room->update(['status' => 'occupied']);
+            });
+        } catch (QueryException $e) {
+            if ($e->errorInfo[1] == 1062) {
+                return back()->withErrors(['msg' => 'This room already has an active resident. Cannot allocate another student.']);
+            }
+            throw $e;
+        }
 
-        return redirect()->route('allocations.index')->with('success', 'Allocation created.');
+        return redirect()->route('allocations.index')
+                         ->with('success', 'Allocation created.');
     }
 
+    /**
+     * Admin ends an allocation (evicts a student from a room).
+     */
     public function end(Allocation $allocation)
     {
         $allocation->update(['end_date' => now(), 'status' => 'completed']);
@@ -58,24 +86,5 @@ class AllocationController extends Controller
         return redirect()->route('allocations.index')->with('success', 'Allocation ended.');
     }
 
-    /**
-     * Student leaves the room (ends their own allocation).
-     */
-    public function leave(Allocation $allocation)
-    {
-        // Ensure the logged-in user owns this allocation and it's active
-        if ($allocation->user_id !== auth()->id() || $allocation->status !== 'active') {
-            abort(403, 'Unauthorized action.');
-        }
-
-        $allocation->update([
-            'end_date' => now(),
-            'status' => 'completed'
-        ]);
-
-        // Free the room
-        $allocation->room->update(['status' => 'available']);
-
-        return redirect()->route('dashboard')->with('success', 'You have left the room. It is now available for others.');
-    }
+    // ❌ The 'leave' method has been removed – only admins can remove residents.
 }

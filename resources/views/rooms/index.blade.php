@@ -114,7 +114,9 @@
             background:var(--green);
             color:#fff;
         }
-
+        .badge.archived {
+        background: var(--surface-2);
+        color: var(--text-3);
         /* Empty */
         .empty{
             grid-column:1/-1;padding:64px 20px;text-align:center;
@@ -225,12 +227,16 @@
         @empty
         <div class="empty">
             <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M3 10.5L12 3l9 7.5V20a1 1 0 01-1 1H5a1 1 0 01-1-1v-9.5z"/></svg>
-            @if(auth()->user()->isResident())
+            @if(request('status') === 'maintenance')
+                <p>No rooms are currently under maintenance.</p>
+            @elseif(request('archived') && auth()->user()->isAdmin())
+                <p>No archived rooms found. You can archive rooms from the "All rooms" view.</p>
+            @elseif(auth()->user()->isResident())
                 <p>No available rooms at the moment. Please check back later.</p>
             @else
                 <p>No rooms found{{ request('status') ? ' with status "'.request('status').'"' : '' }}.</p>
             @endif
-            @if(auth()->user()->isAdmin())
+            @if(auth()->user()->isAdmin() && !request('archived'))
                 <a href="{{ route('rooms.create') }}" style="display:inline-flex;align-items:center;gap:6px;padding:8px 16px;background:var(--accent);color:#fff;border-radius:var(--r);font-size:13px;font-weight:500;text-decoration:none;">
                     + Add your first room
                 </a>

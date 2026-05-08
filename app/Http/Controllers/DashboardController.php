@@ -14,8 +14,8 @@ class DashboardController extends Controller
     {
         $user = auth()->user();
 
+        // -------------------- ADMIN DASHBOARD --------------------
         if ($user->isAdmin()) {
-            // Use same variable names as your old dashboard.blade.php
             $total = Room::count();
             $available = Room::where('status', 'available')->count();
             $occupied = Room::where('status', 'occupied')->count();
@@ -32,54 +32,68 @@ class DashboardController extends Controller
             ));
         }
 
-       // Inside DashboardController, replace the staff block with:
+        // -------------------- STAFF DASHBOARD --------------------
+        if ($user->isStaff()) {
+            // Fetch paginated requests (assigned to this staff OR unassigned)
+            $assignedRequests = MaintenanceRequest::with('room')
+                ->where(function ($query) use ($user) {
+                    $query->where('assigned_to', $user->id)
+                          ->orWhereNull('assigned_to');
+                })
+                ->where('status', '!=', 'resolved')
+                ->paginate(15);
 
-if ($user->isStaff()) {
-    // Eager load room relationship, paginate (15 per page)
-    $assignedRequests = MaintenanceRequest::with('room')
-        ->where(function ($query) use ($user) {
-            $query->where('assigned_to', $user->id)
-                  ->orWhereNull('assigned_to');
-        })
-        ->where('status', '!=', 'resolved')
-        ->paginate(15); // paginate instead of get()
+            // Stats from the paginated collection (only current page – but that's fine for dashboard stats)
+            // If you want totals across all pages, you'd need separate count queries.
+            // However, for a dashboard, showing counts of pending/unassigned in the current page is acceptable.
+            // To get accurate totals across all records, use separate count queries.
+            $pendingCount = MaintenanceRequest::where(function ($q) use ($user) {
+                    $q->where('assigned_to', $user->id)->orWhereNull('assigned_to');
+                })->where('status', 'pending')->count();
 
-    // Compute stats in controller
-    $pendingCount = $assignedRequests->where('status', 'pending')->count();
-    $inProgressCount = $assignedRequests->where('status', 'in_progress')->count();
-    $unassignedCount = $assignedRequests->whereNull('assigned_to')->count();
-    $myAssignedCount = $assignedRequests->where('assigned_to', $user->id)->count();
-    $resolvedCount = MaintenanceRequest::where('assigned_to', $user->id)
-        ->where('status', 'resolved')
-        ->count();
+            $unassignedCount = MaintenanceRequest::whereNull('assigned_to')
+                ->where('status', '!=', 'resolved')
+                ->count();
 
-    return view('dashboard.staff', compact(
-        'assignedRequests', 'resolvedCount', 'pendingCount',
-        'inProgressCount', 'unassignedCount', 'myAssignedCount'
-    ));
-}
-        // Student dashboard
+            $myAssignedCount = MaintenanceRequest::where('assigned_to', $user->id)
+                ->where('status', '!=', 'resolved')
+                ->count();
+
+            $resolvedCount = MaintenanceRequest::where('assigned_to', $user->id)
+                ->where('status', 'resolved')
+                ->count();
+
+            return view('dashboard.staff', compact(
+                'assignedRequests', 'resolvedCount', 'pendingCount',
+                'unassignedCount', 'myAssignedCount'
+            ));
+        }
+
+        // -------------------- STUDENT DASHBOARD --------------------
         $activeAllocation = Allocation::where('user_id', $user->id)
             ->where('status', 'active')
             ->first();
+
         $pendingApplication = RoomApplication::where('user_id', $user->id)
             ->where('status', 'pending')
             ->first();
+
         $recentRequests = MaintenanceRequest::where('user_id', $user->id)
             ->latest()
             ->take(5)
             ->get();
 
-        // Additional stats for student (optional, but useful)
         $totalMaintenance = MaintenanceRequest::where('user_id', $user->id)->count();
         $pendingMaintenance = MaintenanceRequest::where('user_id', $user->id)
             ->where('status', 'pending')->count();
         $resolvedMaintenance = MaintenanceRequest::where('user_id', $user->id)
             ->where('status', 'resolved')->count();
+
         $pastAllocations = Allocation::where('user_id', $user->id)
             ->where('status', 'completed')
             ->orderBy('end_date', 'desc')
-            ->take(3)->get();
+            ->take(3)
+            ->get();
 
         return view('dashboard.student', compact(
             'activeAllocation', 'pendingApplication', 'recentRequests',

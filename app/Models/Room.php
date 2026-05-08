@@ -16,13 +16,39 @@ class Room extends Model
      */
     protected $fillable = [
         'room_number',
-        'type',
-        'capacity',
         'price_per_month',
         'status',
         'image',
         'building_id',
+        'archived',
     ];
+
+    /**
+     * The attributes that should be cast.
+     *
+     * @var array<string, string>
+     */
+    protected $casts = [
+        'archived' => 'boolean',
+    ];
+
+    /**
+     * Bootstrap the model and its traits.
+     *
+     * Forces every room to be a single room with capacity 1.
+     */
+    protected static function booted()
+    {
+        static::creating(function ($room) {
+            $room->type = 'single';
+            $room->capacity = 1;
+        });
+
+        static::updating(function ($room) {
+            $room->type = 'single';
+            $room->capacity = 1;
+        });
+    }
 
     /**
      * Get the building that owns the room.
@@ -54,5 +80,21 @@ class Room extends Model
     public function maintenanceRequests()
     {
         return $this->hasMany(MaintenanceRequest::class);
+    }
+
+    /**
+     * Scope a query to only include active (non‑archived) rooms.
+     */
+    public function scopeActive($query)
+    {
+        return $query->where('archived', false);
+    }
+
+    /**
+     * Scope a query to only include archived rooms.
+     */
+    public function scopeArchived($query)
+    {
+        return $query->where('archived', true);
     }
 }

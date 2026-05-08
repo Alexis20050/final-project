@@ -6,6 +6,7 @@ use App\Models\Room;
 use App\Models\RoomApplication;
 use App\Models\Allocation;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
 
 class RoomController extends Controller
@@ -15,20 +16,23 @@ class RoomController extends Controller
         $user = auth()->user();
         $query = Room::query();
 
-        // Admin can filter archived rooms (if ?archived=1)
-        if ($user && $user->isAdmin() && $request->boolean('archived')) {
-            $query->where('archived', true);
-        } elseif (!$user || !$user->isAdmin()) {
-            // Non‑admin users never see archived rooms
+        // Admin: archived filter handling
+        if ($user && $user->isAdmin()) {
+            if ($request->boolean('archived')) {
+                $query->where('archived', true);
+            } elseif (!$request->filled('status')) {
+                $query->where('archived', false);
+            }
+        } else {
             $query->where('archived', false);
         }
 
-        // Apply status filter if provided (admin/staff can filter any status)
-        if ($request->filled('status') && in_array($request->status, ['available', 'occupied', 'maintenance'])) {
+        // Apply status filter (including 'archived')
+        if ($request->filled('status') && in_array($request->status, ['available', 'occupied', 'maintenance', 'archived'])) {
             $query->where('status', $request->status);
         }
 
-        // Students (residents) can only see available rooms
+        // Students see only available rooms
         if ($user && $user->isResident()) {
             $query->where('status', 'available');
         }
@@ -46,8 +50,6 @@ class RoomController extends Controller
     {
         $validated = $request->validate([
             'room_number'      => 'required|unique:rooms',
-            'type'             => 'required|in:single,double,dormitory',
-            'capacity'         => 'required|integer|min:1',
             'price_per_month'  => 'required|numeric|min:0',
             'status'           => 'required|in:available,occupied,maintenance',
             'image'            => 'nullable|image|mimes:jpeg,png,jpg,webp|max:2048',
@@ -65,26 +67,29 @@ class RoomController extends Controller
     {
         $user = auth()->user();
 
-        // Block non‑admin users from seeing archived rooms
         if (!$user->isAdmin() && $room->archived) {
             abort(404);
         }
 
-        // Students (residents) can only view available rooms OR their own allocated room
-        if ($user && $user->isResident()) {
-            // Get the student's active allocation (if any)
-            $activeAllocation = Allocation::where('user_id', $user->id)
-                ->where('status', 'active')
-                ->first();
-            $isTheirRoom = $activeAllocation && $activeAllocation->room_id === $room->id;
+        // ✅ Load the active allocation (with resident) for this room
+        $activeAllocation = Allocation::where('room_id', $room->id)
+                              ->where('status', 'active')
+                              ->with('user')
+                              ->first();
 
-            // Allow if it's their own room OR the room is available
+        // Resident visibility logic
+        if ($user && $user->isResident()) {
+            $myActive = Allocation::where('user_id', $user->id)
+                        ->where('status', 'active')
+                        ->first();
+            $isTheirRoom = $myActive && $myActive->room_id === $room->id;
+
             if (!$isTheirRoom && $room->status !== 'available') {
                 abort(404, 'Room not found.');
             }
         }
 
-        return view('rooms.show', compact('room'));
+        return view('rooms.show', compact('room', 'activeAllocation'));
     }
 
     public function edit(Room $room)
@@ -96,13 +101,24 @@ class RoomController extends Controller
     {
         $validated = $request->validate([
             'room_number'      => 'required|unique:rooms,room_number,' . $room->id,
-            'type'             => 'required|in:single,double,dormitory',
-            'capacity'         => 'required|integer|min:1',
             'price_per_month'  => 'required|numeric|min:0',
             'status'           => 'required|in:available,occupied,maintenance',
             'image'            => 'nullable|image|mimes:jpeg,png,jpg,webp|max:2048',
         ]);
 
+        // Prevent setting to 'available' if there's an active resident
+        if ($validated['status'] === 'available') {
+            $active = Allocation::where('room_id', $room->id)
+                        ->where('status', 'active')
+                        ->exists();
+            if ($active) {
+                return back()->withErrors([
+                    'status' => 'Cannot set room to available while a resident is allocated. End the allocation first.'
+                ]);
+            }
+        }
+
+        // Image handling
         if ($request->hasFile('image')) {
             if ($room->image && Storage::disk('public')->exists($room->image)) {
                 Storage::disk('public')->delete($room->image);
@@ -117,56 +133,102 @@ class RoomController extends Controller
     }
 
     /**
-     * Archive a room (soft hide – hidden from students/staff).
+     * Archive a room – automatically ends any active allocation.
      */
     public function archive(Room $room)
     {
-        $room->update(['archived' => true]);
+        $activeAllocation = Allocation::where('room_id', $room->id)
+                              ->where('status', 'active')
+                              ->first();
+        if ($activeAllocation) {
+            $activeAllocation->update([
+                'end_date' => now(),
+                'status'   => 'completed',
+            ]);
+        }
+
+        $room->update([
+            'archived' => true,
+            'status'   => 'archived',
+        ]);
         return redirect()->route('rooms.index')->with('success', 'Room archived.');
     }
 
     /**
-     * Restore an archived room (make it visible again).
+     * Restore an archived room – sets status correctly based on current allocations.
      */
     public function restore(Room $room)
     {
-        $room->update(['archived' => false]);
+        $hasActive = Allocation::where('room_id', $room->id)
+                        ->where('status', 'active')
+                        ->exists();
+
+        $room->update([
+            'archived' => false,
+            'status'   => $hasActive ? 'occupied' : 'available',
+        ]);
         return redirect()->route('rooms.index')->with('success', 'Room restored.');
     }
 
     /**
-     * Handle a direct room request from a student.
+     * Remove the current resident from a room (admin eviction).
      */
+    public function removeResident(Room $room)
+    {
+        $activeAllocation = Allocation::where('room_id', $room->id)
+                              ->where('status', 'active')
+                              ->first();
+
+        if (!$activeAllocation) {
+            return back()->with('error', 'No active resident in this room.');
+        }
+
+        DB::transaction(function () use ($room, $activeAllocation) {
+            $activeAllocation->update([
+                'end_date' => now(),
+                'status'   => 'completed',
+            ]);
+            $room->update(['status' => 'available']);
+        });
+
+        return redirect()->route('rooms.index')
+                         ->with('success', 'Resident has been removed from the room.');
+    }
+
     public function requestRoom(Room $room)
     {
         $user = auth()->user();
 
-        // Only residents can request
         if (!$user->isResident()) {
             abort(403, 'Only students can request rooms.');
         }
 
-        // Only available rooms can be requested
         if ($room->status !== 'available') {
             return back()->with('error', 'This room is not available.');
         }
 
-        // Check if user already has a pending application
         $existing = RoomApplication::where('user_id', $user->id)
             ->where('status', 'pending')
             ->first();
         if ($existing) {
-            return back()->with('error', 'You already have a pending room request. Please wait for it to be processed.');
+            return back()->with('error', 'You already have a pending room request.');
         }
 
-        // Create the application
+        $activeAllocation = Allocation::where('user_id', $user->id)
+            ->where('status', 'active')
+            ->first();
+        if ($activeAllocation) {
+            return back()->with('error', 'You are already allocated to a room. You cannot request another room.');
+        }
+
         RoomApplication::create([
-            'user_id' => $user->id,
-            'room_id' => $room->id,
-            'preferred_move_in' => now()->addDays(7)->toDateString(),
-            'status' => 'pending',
+            'user_id'              => $user->id,
+            'room_id'              => $room->id,
+            'preferred_move_in'    => now()->addDays(7)->toDateString(),
+            'status'               => 'pending',
         ]);
 
-        return redirect()->route('applications.my')->with('success', 'Room request submitted. An administrator will review it.');
+        return redirect()->route('applications.my')
+                         ->with('success', 'Room request submitted. An administrator will review it.');
     }
 }

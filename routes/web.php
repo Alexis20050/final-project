@@ -48,6 +48,9 @@ Route::middleware(['auth'])->group(function () {
         // Removed destroy route – replaced by archive/restore
         Route::patch('/rooms/{room}/archive', [RoomController::class, 'archive'])->name('rooms.archive');
         Route::patch('/rooms/{room}/restore', [RoomController::class, 'restore'])->name('rooms.restore');
+        // 🔥 Remove resident – admin eviction action
+        Route::delete('/rooms/{room}/resident', [RoomController::class, 'removeResident'])
+             ->name('rooms.removeResident');
     });
 
     // Student direct request (POST)
@@ -67,7 +70,6 @@ Route::middleware(['auth'])->group(function () {
 
     // ==================== ALLOCATIONS ====================
     Route::resource('allocations', AllocationController::class)->middleware('admin');
-    Route::patch('/allocations/{allocation}/leave', [AllocationController::class, 'leave'])->name('allocations.leave');
     Route::post('/allocations/{allocation}/end', [AllocationController::class, 'end'])->name('allocations.end')->middleware('admin');
 
     // ==================== MAINTENANCE REQUESTS ====================

@@ -133,7 +133,7 @@
                             <th>Title</th>
                             <th>Priority</th>
                             <th>Status</th>
-                            <th>Assigned To</th>
+                            {{-- Assigned To column removed --}}
                             <th>Submitted</th>
                             <th>Actions</th>
                         </tr>
@@ -153,13 +153,7 @@
                                     {{ ucfirst(str_replace('_', ' ', $req->status)) }}
                                 </span>
                             </td>
-                            <td>
-                                @if($req->assignedStaff)
-                                    {{ $req->assignedStaff->name }}
-                                @else
-                                    <span class="text-muted" style="color:var(--text-3);">Unassigned</span>
-                                @endif
-                            </td>
+                            {{-- Removed the cell for assigned staff --}}
                             <td>{{ $req->created_at->diffForHumans() }}</td>
                             <td>
                                 @if(auth()->user()->isStaff())

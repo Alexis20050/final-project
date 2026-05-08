@@ -120,11 +120,31 @@
             text-decoration: none;
             transition: background .15s, color .15s;
             white-space: nowrap;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
         }
         .nav-link:hover { background: var(--surface-2); color: var(--text); }
         .nav-link.active {
             background: var(--surface-2); color: var(--text);
             font-weight: 500;
+        }
+
+        /* Notification badge – follows theme colors */
+        .notification-badge {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            min-width: 18px;
+            height: 18px;
+            padding: 0 5px;
+            background: var(--red);
+            color: white;
+            font-size: 10px;
+            font-weight: 600;
+            border-radius: 40px;
+            line-height: 1;
+            margin-left: 2px;
         }
 
         .nav-right { display: flex; align-items: center; gap: 10px; margin-left: auto; }
@@ -232,10 +252,15 @@
             box-shadow: var(--shadow);
         }
         .mobile-link {
-            padding: 9px 12px; border-radius: var(--r);
-            font-size: 14px; color: var(--text-2);
+            padding: 9px 12px;
+            border-radius: var(--r);
+            font-size: 14px;
+            color: var(--text-2);
             text-decoration: none;
             transition: background .12s, color .12s;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
         }
         .mobile-link:hover, .mobile-link.active { background: var(--surface-2); color: var(--text); }
 
@@ -271,6 +296,39 @@
         ::-webkit-scrollbar { width: 5px; }
         ::-webkit-scrollbar-track { background: transparent; }
         ::-webkit-scrollbar-thumb { background: var(--border-md); border-radius: 99px; }
+
+        /* ─── PAGINATION (shared component) ─────────── */
+        .pagination-bar {
+            display: flex;
+            justify-content: center;
+            gap: 6px;
+            padding: 16px 0;
+            flex-wrap: wrap;
+        }
+        .page-item {
+            padding: 6px 12px;
+            border-radius: var(--r);
+            background: var(--surface);
+            border: 1px solid var(--border);
+            color: var(--text-2);
+            font-size: 13px;
+            font-weight: 500;
+            text-decoration: none;
+            transition: background 0.12s, color 0.12s;
+        }
+        .page-item:hover {
+            background: var(--surface-2);
+            color: var(--text);
+        }
+        .page-item.active {
+            background: var(--accent);
+            color: #fff;
+            border-color: var(--accent);
+        }
+        .page-item.disabled {
+            opacity: 0.4;
+            pointer-events: none;
+        }
     </style>
 </head>
 <body
@@ -302,7 +360,15 @@
             <a href="{{ route('rooms.index') }}" class="nav-link {{ request()->routeIs('rooms.*') && !request()->routeIs('rooms.create') ? 'active' : '' }}">Rooms</a>
             @auth @if(auth()->user()->isAdmin())
             <a href="{{ route('rooms.create') }}" class="nav-link {{ request()->routeIs('rooms.create') ? 'active' : '' }}">Add Room</a>
-            <a href="{{ route('applications.index') }}" class="nav-link {{ request()->routeIs('applications.*') ? 'active' : '' }}">Applications</a>
+            <a href="{{ route('applications.index') }}" class="nav-link {{ request()->routeIs('applications.*') ? 'active' : '' }}">
+                Applications
+                @php
+                    $pendingCount = \App\Models\RoomApplication::where('status', 'pending')->count();
+                @endphp
+                @if($pendingCount > 0)
+                    <span class="notification-badge">{{ $pendingCount }}</span>
+                @endif
+            </a>
             <a href="{{ route('admin.users.index') }}" class="nav-link {{ request()->routeIs('admin.users.*') ? 'active' : '' }}">User Management</a>
             @endif @endauth
             <a href="{{ route('about') }}" class="nav-link {{ request()->routeIs('about') ? 'active' : '' }}">About</a>
@@ -361,7 +427,15 @@
     <a href="{{ route('rooms.index') }}" class="mobile-link {{ request()->routeIs('rooms.*') ? 'active' : '' }}">Rooms</a>
     @auth @if(auth()->user()->isAdmin())
     <a href="{{ route('rooms.create') }}" class="mobile-link">Add Room</a>
-    <a href="{{ route('applications.index') }}" class="mobile-link">Applications</a>
+    <a href="{{ route('applications.index') }}" class="mobile-link">
+        Applications
+        @php
+            $mobilePendingCount = \App\Models\RoomApplication::where('status', 'pending')->count();
+        @endphp
+        @if($mobilePendingCount > 0)
+            <span class="notification-badge">{{ $mobilePendingCount }}</span>
+        @endif
+    </a>
     <a href="{{ route('admin.users.index') }}" class="mobile-link">User Management</a>
     @endif @endauth
     <a href="{{ route('about') }}" class="mobile-link">About</a>
@@ -395,4 +469,4 @@
 </main>
 
 </body>
-</html> 
+</html>
