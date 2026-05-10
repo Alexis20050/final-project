@@ -35,28 +35,39 @@ COPY --from=composer:2 /usr/bin/composer /usr/bin/composer
 
 WORKDIR /var/www/html
 
-# Copy Laravel app
+# Copy composer files first for better caching
+COPY composer.json composer.lock ./
+
+# Install PHP dependencies (production only)
+RUN composer install --no-dev --optimize-autoloader --no-interaction
+
+# Copy the rest of the application
 COPY . .
 
-# Install dependencies
-RUN composer install --no-dev --optimize-autoloader --no-interaction
+# Install Node dependencies and build assets
 RUN npm install && npm run build
 
-# Clear Laravel cache
-RUN php artisan config:clear \
-    && php artisan route:clear \
-    && php artisan view:clear
+# Generate Laravel caches (for production speed)
+RUN php artisan config:cache \
+    && php artisan route:cache \
+    && php artisan view:cache
 
-# Create storage symlink
-RUN php artisan storage:link || true
-
-# Fix permissions
-RUN mkdir -p storage/framework/cache storage/framework/sessions storage/framework/views bootstrap/cache public/uploads \
+# Create necessary directories and fix permissions
+RUN mkdir -p storage/framework/cache storage/framework/sessions \
+    storage/framework/views bootstrap/cache public/uploads \
     && chown -R www-data:www-data storage bootstrap/cache public/uploads \
     && chmod -R 775 storage bootstrap/cache public/uploads
+
+# Create entrypoint script to run storage:link and migrations at container start
+RUN printf '#!/bin/bash\n\
+set -e\n\
+php artisan storage:link || true\n\
+php artisan migrate --force || true\n\
+apache2-foreground\n' > /usr/local/bin/entrypoint.sh \
+    && chmod +x /usr/local/bin/entrypoint.sh
 
 # Expose port
 EXPOSE 10000
 
-# Start Apache
-CMD ["apache2-foreground"]
+# Start Apache via entrypoint (creates symlink on every startup)
+CMD ["entrypoint.sh"]
