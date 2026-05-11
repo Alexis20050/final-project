@@ -371,7 +371,7 @@
             </a>
             <a href="{{ route('admin.users.index') }}" class="nav-link {{ request()->routeIs('admin.users.*') ? 'active' : '' }}">User Management</a>
             @endif @endauth
-            <a href="{{ route('about') }}" class="nav-link {{ request()->routeIs('about') ? 'active' : '' }}">About</a>
+            
         </div>
 
         <div class="nav-right">
@@ -438,7 +438,6 @@
     </a>
     <a href="{{ route('admin.users.index') }}" class="mobile-link">User Management</a>
     @endif @endauth
-    <a href="{{ route('about') }}" class="mobile-link">About</a>
     <div style="height:1px;background:var(--border);margin:8px 0;"></div>
     @auth
     <a href="{{ route('profile.edit') }}" class="mobile-link">Profile</a>

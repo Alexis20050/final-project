@@ -28,8 +28,7 @@ class UserSeeder extends Seeder
             'email' => 'resident@example.com',
             'password' => bcrypt('password'),
             'role' => 'resident',
-            'student_id' => '2024-0001',
-            'phone' => '09123456789',
+            
         ]);
     }
 }

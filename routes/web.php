@@ -17,7 +17,6 @@ use Illuminate\Support\Facades\Route;
 |--------------------------------------------------------------------------
 */
 Route::get('/', fn() => view('welcome'))->name('home');
-Route::view('/about', 'about')->name('about');
 
 require __DIR__.'/auth.php';
 

@@ -725,7 +725,7 @@
         <div class="nav-links">
             <a href="#features" class="nav-link">Features</a>
             <a href="#how-it-works" class="nav-link">How it works</a>
-            <a href="{{ route('about') }}" class="nav-link">About</a>
+           
         </div>
         <div class="nav-actions">
             @auth
@@ -980,7 +980,6 @@
             <span class="footer-text">© {{ date('Y') }} DormiHub. All rights reserved.</span>
         </div>
         <div class="footer-links">
-            <a href="{{ route('about') }}" class="footer-link">About</a>
             <a href="{{ route('login') }}" class="footer-link">Sign in</a>
             <a href="{{ route('register') }}" class="footer-link">Register</a>
         </div>

@@ -2,32 +2,14 @@
 
 namespace Database\Seeders;
 
-use App\Models\User;
 use Illuminate\Database\Seeder;
 
-class UserSeeder extends Seeder
+class DatabaseSeeder extends Seeder
 {
-    public function run()
+    public function run(): void
     {
-        User::create([
-            'name' => 'Admin User',
-            'email' => 'admin@example.com',
-            'password' => bcrypt('password'),
-            'role' => 'admin',
-        ]);
-
-        User::create([
-            'name' => 'Staff User',
-            'email' => 'staff@example.com',
-            'password' => bcrypt('password'),
-            'role' => 'staff',
-        ]);
-
-        User::create([
-            'name' => 'Resident User',
-            'email' => 'resident@example.com',
-            'password' => bcrypt('password'),
-            'role' => 'resident',
+        $this->call([
+            UserSeeder::class,
         ]);
     }
 }

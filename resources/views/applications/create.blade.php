@@ -10,236 +10,151 @@
 
     <style>
         .back-btn {
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            width: 28px;
-            height: 28px;
-            border-radius: 7px;
-            border: 1px solid var(--border-md);
-            background: var(--surface);
-            color: var(--text-2);
-            text-decoration: none;
+            display: flex; align-items: center; justify-content: center;
+            width: 28px; height: 28px; border-radius: 7px;
+            border: 1px solid var(--border-md); background: var(--surface);
+            color: var(--text-2); text-decoration: none;
             transition: background 0.12s, transform 0.1s;
         }
-        .back-btn:hover {
-            background: var(--surface-2);
-            transform: translateX(-2px);
-        }
+        .back-btn:hover { background: var(--surface-2); transform: translateX(-2px); }
 
         .form-layout {
-            display: grid;
-            grid-template-columns: 1fr 280px;
-            gap: 20px;
-            align-items: start;
-            max-width: 880px;
+            display: grid; grid-template-columns: 1fr 250px;
+            gap: 24px; align-items: start; max-width: 960px;
         }
-        @media (max-width: 820px) {
-            .form-layout {
-                grid-template-columns: 1fr;
-            }
-        }
+        @media (max-width: 820px) { .form-layout { grid-template-columns: 1fr; } }
 
         .card {
-            background: var(--surface);
-            border: 1px solid var(--border);
-            border-radius: var(--r2);
-            overflow: hidden;
-            transition: box-shadow 0.2s;
+            background: var(--surface); border: 1px solid var(--border);
+            border-radius: var(--r3); overflow: hidden;
         }
-        .card:hover {
-            box-shadow: var(--shadow);
-        }
-
         .card-header {
-            display: flex;
-            align-items: center;
-            gap: 11px;
-            padding: 16px 20px;
-            border-bottom: 1px solid var(--border);
+            display: flex; align-items: center; gap: 11px;
+            padding: 16px 20px; border-bottom: 1px solid var(--border);
             background: var(--surface-2);
         }
         .card-icon {
-            width: 34px;
-            height: 34px;
-            border-radius: 9px;
-            background: var(--accent-bg);
-            display: flex;
-            align-items: center;
-            justify-content: center;
+            width: 34px; height: 34px; border-radius: 9px;
+            background: var(--accent-bg); display: flex;
+            align-items: center; justify-content: center;
         }
-        .card-icon svg {
-            width: 15px;
-            height: 15px;
-            color: var(--accent);
-        }
-        .card-title {
-            font-size: 14px;
-            font-weight: 600;
-            color: var(--text);
-            margin: 0 0 1px;
-        }
-        .card-subtitle {
-            font-size: 11.5px;
-            color: var(--text-3);
-            margin: 0;
-        }
+        .card-icon svg { width: 15px; height: 15px; color: var(--accent); }
+        .card-title { font-size: 14px; font-weight: 600; color: var(--text); margin:0 0 1px; }
+        .card-subtitle { font-size: 11.5px; color: var(--text-3); margin:0; }
 
-        .form-body {
-            padding: 20px;
-            display: flex;
-            flex-direction: column;
-            gap: 20px;
-        }
+        .form-body { padding: 20px; display: flex; flex-direction: column; gap: 20px; }
 
-        .field {
-            display: flex;
-            flex-direction: column;
-            gap: 6px;
-        }
-        .field-label {
-            display: block;
-            font-size: 12px;
-            font-weight: 600;
-            color: var(--text-2);
-        }
-        .field-label .required {
-            color: var(--red);
-            margin-left: 3px;
-        }
-        .field-hint {
-            font-size: 11.5px;
-            color: var(--text-3);
-            margin-top: 4px;
-        }
+        .field { display: flex; flex-direction: column; gap: 6px; }
+        .field-label { display: block; font-size: 12px; font-weight: 600; color: var(--text-2); }
+        .field-label .required { color: var(--red); margin-left: 3px; }
+        .field-hint { font-size: 11.5px; color: var(--text-3); margin-top: 4px; }
 
         .field-input, .field-select {
-            width: 100%;
-            padding: 8px 12px;
-            background: var(--surface);
-            border: 1px solid var(--border-md);
-            border-radius: var(--r);
-            font-size: 13.5px;
-            color: var(--text);
-            outline: none;
+            width: 100%; padding: 10px 14px; background: var(--surface);
+            border: 1px solid var(--border-md); border-radius: var(--r);
+            font-size: 14px; color: var(--text); outline: none;
             transition: border 0.15s, box-shadow 0.15s;
         }
         .field-input:focus, .field-select:focus {
-            border-color: var(--accent);
-            box-shadow: 0 0 0 3px rgba(26,86,219,0.1);
+            border-color: var(--accent); box-shadow: 0 0 0 3px rgba(26,86,219,0.12);
         }
-        .dark .field-input, .dark .field-select {
-            background: var(--surface-2);
-        }
+        .dark .field-input, .dark .field-select { background: var(--surface-2); }
+        .field-error { font-size: 11.5px; color: var(--red); margin-top: 4px; display: flex; align-items: center; gap: 4px; }
 
-        .field-select {
-            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%239ca3af' stroke-width='2'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E");
-            background-repeat: no-repeat;
-            background-position: right 10px center;
-            padding-right: 30px;
+        /* Controls row */
+        .controls-row {
+            display: flex; gap: 10px; align-items: center; flex-wrap: wrap;
+            margin-bottom: 8px;
+        }
+        .controls-row select, .controls-row input {
+            padding: 8px 12px; border-radius: var(--r);
+            border: 1px solid var(--border-md);
+            background: var(--surface); color: var(--text);
+            font-size: 13px; outline: none;
+        }
+        .controls-row select { cursor: pointer; }
+        .controls-row input { flex: 1; min-width: 160px; }
+
+        /* Room grid */
+        .room-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+            gap: 12px;
+        }
+        .room-card {
+            border: 2px solid var(--border);
+            border-radius: var(--r2);
+            overflow: hidden;
             cursor: pointer;
+            background: var(--surface);
+            transition: all 0.15s;
+            position: relative;
         }
+        .room-card:hover { border-color: var(--accent); box-shadow: 0 4px 12px rgba(0,0,0,0.08); }
+        .room-card.selected {
+            border-color: var(--accent);
+            box-shadow: 0 0 0 3px rgba(26,86,219,0.2);
+        }
+        .room-card.hidden { display: none; }
 
-        .field-error {
-            font-size: 11.5px;
-            color: var(--red);
-            margin-top: 4px;
-            display: flex;
-            align-items: center;
-            gap: 4px;
+        .room-card img {
+            width: 100%; height: 120px; object-fit: cover;
+            border-bottom: 1px solid var(--border);
         }
+        .room-card .no-img {
+            width: 100%; height: 120px; background: var(--surface-2);
+            display: flex; align-items: center; justify-content: center;
+            color: var(--text-3); border-bottom: 1px solid var(--border);
+        }
+        .room-card .card-info { padding: 10px 12px; }
+        .room-number {
+            font-weight: 700; font-family: var(--mono);
+            color: var(--text);
+        }
+        .room-price {
+            color: var(--accent-tx); font-weight: 600;
+            margin-top: 4px; font-size: 14px;
+        }
+        .check-mark {
+            position: absolute; top: 8px; right: 8px;
+            width: 22px; height: 22px; border-radius: 50%;
+            background: var(--accent); color: white;
+            display: none; align-items: center; justify-content: center;
+            font-size: 14px; font-weight: bold;
+        }
+        .room-card.selected .check-mark { display: flex; }
 
         .form-footer {
-            padding: 14px 20px;
-            border-top: 1px solid var(--border);
-            display: flex;
-            align-items: center;
-            justify-content: flex-end;
-            gap: 8px;
-            background: var(--surface-2);
+            padding: 14px 20px; border-top: 1px solid var(--border);
+            display: flex; align-items: center; justify-content: flex-end;
+            gap: 8px; background: var(--surface-2);
         }
         .btn-cancel {
-            padding: 8px 15px;
-            border-radius: var(--r);
-            font-size: 13px;
-            font-weight: 500;
-            color: var(--text-2);
-            background: var(--surface);
-            border: 1px solid var(--border-md);
-            text-decoration: none;
-            transition: background 0.12s;
+            padding: 8px 15px; border-radius: var(--r); font-size: 13px;
+            font-weight: 500; color: var(--text-2); background: var(--surface);
+            border: 1px solid var(--border-md); text-decoration: none;
         }
-        .btn-cancel:hover {
-            background: var(--surface-2);
-            color: var(--text);
-        }
+        .btn-cancel:hover { background: var(--surface-2); color: var(--text); }
         .btn-submit {
-            display: inline-flex;
-            align-items: center;
-            gap: 7px;
-            padding: 8px 18px;
-            border-radius: var(--r);
-            font-size: 13px;
-            font-weight: 600;
-            color: #fff;
-            background: var(--accent);
-            border: none;
-            cursor: pointer;
+            display: inline-flex; align-items: center; gap: 7px;
+            padding: 8px 18px; border-radius: var(--r); font-size: 13px;
+            font-weight: 600; color: #fff; background: var(--accent);
+            border: none; cursor: pointer; box-shadow: 0 1px 4px rgba(26,86,219,0.25);
             transition: opacity 0.12s, transform 0.1s;
-            box-shadow: 0 1px 4px rgba(26,86,219,0.25);
         }
-        .btn-submit:hover {
-            opacity: 0.87;
-            transform: translateY(-1px);
-        }
-        .btn-submit svg {
-            width: 14px;
-            height: 14px;
-        }
+        .btn-submit:hover { opacity: 0.87; transform: translateY(-1px); }
+        .btn-submit svg { width: 14px; height: 14px; }
 
-        /* Tips card */
-        .tips-list {
-            list-style: none;
-            margin: 0;
-            padding: 0;
-        }
-        .tip-item {
-            display: flex;
-            gap: 10px;
-            padding: 13px 16px;
-            border-bottom: 1px solid var(--border);
-            align-items: flex-start;
-        }
-        .tip-item:last-child {
-            border-bottom: none;
-        }
-        .tip-icon {
-            width: 28px;
-            height: 28px;
-            border-radius: 7px;
+        /* Minimal tips */
+        .tip-box {
+            padding: 16px;
             background: var(--surface-2);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            flex-shrink: 0;
-            margin-top: 1px;
-        }
-        .tip-icon svg {
-            width: 13px;
-            height: 13px;
-            color: var(--text-2);
-        }
-        .tip-title {
-            font-size: 12.5px;
-            font-weight: 600;
-            color: var(--text);
-            margin-bottom: 2px;
-        }
-        .tip-desc {
+            border-radius: var(--r);
             font-size: 12px;
             color: var(--text-3);
-            line-height: 1.55;
+            line-height: 1.6;
         }
+        .tip-box strong { color: var(--text-2); }
     </style>
 
     <div class="form-layout">
@@ -251,33 +166,62 @@
                 </div>
                 <div>
                     <p class="card-title">Room Request</p>
-                    <p class="card-subtitle">Submit a request for a dormitory room</p>
+                    <p class="card-subtitle">Choose a room and suggest a move‑in date</p>
                 </div>
             </div>
 
             <form method="POST" action="{{ route('applications.store') }}">
                 @csrf
                 <div class="form-body">
+                    <input type="hidden" name="room_id" id="room_id" value="{{ old('room_id') }}">
+
                     <div class="field">
-                        <label for="room_id" class="field-label">Select Room <span class="required">*</span></label>
-                        <select id="room_id" name="room_id" class="field-select" required>
-                            <option value="">Choose a room</option>
-                            @foreach($rooms as $room)
-                                <option value="{{ $room->id }}">Room {{ $room->room_number }} – ₱{{ number_format($room->price_per_month) }}/mo ({{ ucfirst($room->type) }})</option>
-                            @endforeach
-                        </select>
-                        <p class="field-hint">Only available rooms are shown.</p>
+                        <div class="field-label">Select a Room <span class="required">*</span></div>
+                        <p class="field-hint">Click on a room card to select it. You can sort by price or search by room number.</p>
                         @error('room_id')
-                            <p class="field-error">{{ $message }}</p>
+                            <p class="field-error">⚠️ {{ $message }}</p>
                         @enderror
+
+                        <!-- Sort & Search -->
+                        <div class="controls-row">
+                            <select id="priceSort" onchange="applyFilters()">
+                                <option value="">Sort by price</option>
+                                <option value="low">Price: Low → High</option>
+                                <option value="high">Price: High → Low</option>
+                            </select>
+                            <input type="text" id="roomSearch" placeholder="Search room number…" oninput="applyFilters()">
+                        </div>
+
+                        <div class="room-grid" id="roomGrid">
+                            @foreach($rooms as $room)
+                                <div class="room-card {{ old('room_id') == $room->id ? 'selected' : '' }}"
+                                     data-room-id="{{ $room->id }}"
+                                     data-price="{{ $room->price_per_month }}"
+                                     data-number="{{ $room->room_number }}"
+                                     onclick="selectRoom(this, {{ $room->id }})">
+                                    <div class="check-mark">✓</div>
+                                    @if($room->image)
+                                        <img src="{{ asset('storage/' . $room->image) }}" alt="Room {{ $room->room_number }}">
+                                    @else
+                                        <div class="no-img">
+                                            <svg width="28" height="28" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
+                                        </div>
+                                    @endif
+                                    <div class="card-info">
+                                        <div class="room-number">{{ $room->room_number }}</div>
+                                        <div class="room-price">₱{{ number_format($room->price_per_month, 0) }}/mo</div>
+                                    </div>
+                                </div>
+                            @endforeach
+                        </div>
                     </div>
 
                     <div class="field">
                         <label for="preferred_move_in" class="field-label">Preferred Move-in Date <span class="required">*</span></label>
-                        <input type="date" name="preferred_move_in" id="preferred_move_in" class="field-input" required min="{{ date('Y-m-d') }}">
-                        <p class="field-hint">You can suggest a date, but final move‑in will be confirmed by the administrator.</p>
+                        <input type="date" name="preferred_move_in" id="preferred_move_in" class="field-input" required min="{{ date('Y-m-d') }}" value="{{ old('preferred_move_in') }}">
+                        <p class="field-hint">The administrator will confirm the final date.</p>
                         @error('preferred_move_in')
-                            <p class="field-error">{{ $message }}</p>
+                            <p class="field-error">⚠️ {{ $message }}</p>
                         @enderror
                     </div>
                 </div>
@@ -292,52 +236,47 @@
             </form>
         </div>
 
-        <!-- Tips card -->
-        <div class="card">
-            <div class="card-header" style="border-bottom: 1px solid var(--border);">
-                <div>
-                    <p class="card-title" style="margin: 0;">Room Request Tips</p>
-                    <p class="card-subtitle" style="margin: 0;">What to consider</p>
-                </div>
-            </div>
-            <ul class="tips-list">
-                <li class="tip-item">
-                    <div class="tip-icon">
-                        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.75" d="M7 20l4-16m2 16l4-16"/></svg>
-                    </div>
-                    <div>
-                        <div class="tip-title">Check room details</div>
-                        <div class="tip-desc">Review room type, capacity, and monthly rate before submitting.</div>
-                    </div>
-                </li>
-                <li class="tip-item">
-                    <div class="tip-icon">
-                        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.75" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
-                    </div>
-                    <div>
-                        <div class="tip-title">Be realistic with move‑in date</div>
-                        <div class="tip-desc">Choose a date that gives the admin time to process your request.</div>
-                    </div>
-                </li>
-                <li class="tip-item">
-                    <div class="tip-icon">
-                        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.75" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1"/></svg>
-                    </div>
-                    <div>
-                        <div class="tip-title">One request at a time</div>
-                        <div class="tip-desc">You can only have one pending request. Cancel it before submitting another.</div>
-                    </div>
-                </li>
-                <li class="tip-item">
-                    <div class="tip-icon">
-                        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.75" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
-                    </div>
-                    <div>
-                        <div class="tip-title">Approval process</div>
-                        <div class="tip-desc">Requests are reviewed by an administrator. You will be notified once approved.</div>
-                    </div>
-                </li>
-            </ul>
+        <!-- Quick tips (compact) -->
+        <div class="tip-box">
+            <strong>Tips</strong><br>
+            • Use the <strong>price sorter</strong> to find rooms within your budget.<br>
+            • Type a <strong>room number</strong> to quickly locate a specific room.<br>
+            • Only <strong>one pending application</strong> is allowed at a time.<br>
+            • An admin will review and approve / reject your request.
         </div>
     </div>
+
+    <script>
+        function selectRoom(card, roomId) {
+            document.querySelectorAll('.room-card').forEach(el => el.classList.remove('selected'));
+            card.classList.add('selected');
+            document.getElementById('room_id').value = roomId;
+        }
+
+        function applyFilters() {
+            const sortSelect = document.getElementById('priceSort');
+            const searchInput = document.getElementById('roomSearch');
+            const sortValue = sortSelect.value;
+            const searchTerm = searchInput.value.toLowerCase().trim();
+            const grid = document.getElementById('roomGrid');
+            const cards = Array.from(grid.querySelectorAll('.room-card'));
+
+            // Show/hide based on search
+            cards.forEach(card => {
+                const roomNumber = card.dataset.number.toLowerCase();
+                card.classList.toggle('hidden', searchTerm !== '' && !roomNumber.includes(searchTerm));
+            });
+
+            // Sort visible cards
+            if (sortValue !== '') {
+                const visibleCards = cards.filter(c => !c.classList.contains('hidden'));
+                const sorted = visibleCards.sort((a, b) => {
+                    const priceA = parseFloat(a.dataset.price);
+                    const priceB = parseFloat(b.dataset.price);
+                    return sortValue === 'low' ? priceA - priceB : priceB - priceA;
+                });
+                sorted.forEach(card => grid.appendChild(card));
+            }
+        }
+    </script>
 </x-app-layout>

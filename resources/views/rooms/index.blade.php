@@ -1,9 +1,9 @@
 <x-app-layout>
     <x-slot name="header">
-        <div style="display:flex;align-items:center;justify-content:space-between;width:100%;gap:12px;flex-wrap:wrap;">
+        <div style="display:flex; align-items:center; justify-content:space-between; width:100%; gap:12px; flex-wrap:wrap;">
             <h2 class="page-header-title">Rooms</h2>
             @if(auth()->user()->isAdmin())
-            <a href="{{ route('rooms.create') }}" style="display:inline-flex;align-items:center;gap:7px;padding:7px 15px;background:var(--accent);color:#fff;border-radius:var(--r);font-size:13px;font-weight:500;text-decoration:none;box-shadow:0 1px 4px rgba(26,86,219,.25);transition:opacity .15s;" onmouseover="this.style.opacity='.85'" onmouseout="this.style.opacity='1'">
+            <a href="{{ route('rooms.create') }}" style="display:inline-flex; align-items:center; gap:7px; padding:7px 15px; background:var(--accent); color:#fff; border-radius:var(--r); font-size:13px; font-weight:500; text-decoration:none; box-shadow:0 1px 4px rgba(26,86,219,.25); transition:opacity .15s;" onmouseover="this.style.opacity='.85'" onmouseout="this.style.opacity='1'">
                 <svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 5v14M5 12h14"/></svg>
                 Add Room
             </a>
@@ -12,238 +12,354 @@
     </x-slot>
 
     <style>
-        .badge{display:inline-flex;align-items:center;padding:3px 9px;border-radius:99px;font-size:11.5px;font-weight:500;}
-        .badge.available{background:var(--green-bg);color:var(--green);}
-        .badge.occupied{background:var(--red-bg);color:var(--red);}
-        .badge.maintenance{background:var(--amber-bg);color:var(--amber);}
-
-        /* Alert */
-        .alert-ok{
-            display:flex;align-items:center;gap:9px;
-            padding:11px 15px;border-radius:var(--r);
-            background:var(--green-bg);color:var(--green);
-            border:1px solid rgba(14,159,110,.2);
-            font-size:13px;margin-bottom:20px;
+        /* ── Alerts ── */
+        .alert {
+            display: flex; align-items: center; gap: 10px;
+            padding: 12px 16px; border-radius: var(--r);
+            font-size: 14px; margin-bottom: 20px;
+            border: 1px solid;
         }
-        .alert-ok svg{width:15px;height:15px;flex-shrink:0;}
-
-        /* Filters */
-        .filters{display:flex;gap:6px;margin-bottom:20px;flex-wrap:wrap;}
-        .chip{
-            padding:5px 13px;border-radius:99px;font-size:12.5px;font-weight:500;
-            border:1px solid var(--border-md);background:var(--surface);color:var(--text-2);
-            text-decoration:none;transition:background .12s,color .12s,border-color .12s;
+        .alert-success {
+            background: var(--green-bg); color: var(--green);
+            border-color: rgba(14,159,110,.2);
         }
-        .chip:hover{background:var(--surface-2);color:var(--text);}
-        .chip.on{background:var(--accent);color:#fff;border-color:var(--accent);box-shadow:0 1px 4px rgba(26,86,219,.25);}
-
-        /* Room grid */
-        .rg{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:14px;}
-        @media(max-width:1050px){.rg{grid-template-columns:repeat(2,1fr);}}
-        @media(max-width:640px){.rg{grid-template-columns:1fr;}}
-
-        .rc{
-            background:var(--surface);border:1px solid var(--border);
-            border-radius:var(--r2);overflow:hidden;display:flex;flex-direction:column;
-            transition:box-shadow .2s,border-color .2s,transform .15s;
+        .alert-error {
+            background: var(--red-bg); color: var(--red);
+            border-color: rgba(224,36,36,.2);
         }
-        .rc:hover{box-shadow:0 4px 20px rgba(0,0,0,.09);border-color:var(--border-md);transform:translateY(-1px);}
+        .alert svg { width: 16px; height: 16px; flex-shrink: 0; }
 
-        .rc-head{
-            padding:14px 16px;border-bottom:1px solid var(--border);
-            display:flex;align-items:flex-start;justify-content:space-between;
+        /* ── Filters ── */
+        .filters {
+            display: flex; gap: 6px; margin-bottom: 20px; flex-wrap: wrap;
         }
-        .rc-num{font-size:15px;font-weight:700;color:var(--text);letter-spacing:-.3px;font-family:var(--mono);}
-        .rc-type{
-            font-size:11px;font-weight:500;padding:3px 8px;border-radius:99px;
-            background:var(--surface-2);color:var(--text-3);border:1px solid var(--border-md);
-            text-transform:capitalize;
+        .chip {
+            padding: 6px 14px; border-radius: 99px;
+            font-size: 13px; font-weight: 500;
+            border: 1px solid var(--border-md);
+            background: var(--surface); color: var(--text-2);
+            text-decoration: none;
+            transition: all .15s;
+        }
+        .chip:hover {
+            background: var(--surface-2); color: var(--text);
+            border-color: var(--border-md);
+        }
+        .chip.on {
+            background: var(--accent); color: #fff;
+            border-color: var(--accent);
+            box-shadow: 0 2px 8px rgba(26,86,219,.25);
         }
 
-        .rc-body{padding:12px 16px;flex:1;display:flex;flex-direction:column;gap:0;}
-        .rc-row{
-            display:flex;align-items:center;justify-content:space-between;
-            padding:7px 0;border-bottom:1px solid var(--border);
+        /* ── Grid ── */
+        .room-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+            gap: 18px;
         }
-        .rc-row:last-child{border-bottom:none;}
-        .rc-lbl{font-size:12px;color:var(--text-3);}
-        .rc-val{font-size:12.5px;font-weight:500;color:var(--text);}
-        .rc-price{font-size:15px;font-weight:700;color:var(--accent-tx);letter-spacing:-.3px;}
+        .room-card {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: var(--r3);
+            overflow: hidden;
+            transition: transform .2s, box-shadow .2s, border-color .2s;
+            display: flex; flex-direction: column;
+        }
+        .room-card:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 12px 30px rgba(0,0,0,.08), 0 1px 3px rgba(0,0,0,.04);
+            border-color: var(--border-md);
+        }
 
-        .rc-foot{
-            padding:10px 16px;border-top:1px solid var(--border);
-            display:flex;align-items:center;justify-content:space-between;
-            background:var(--surface-2);
-            flex-wrap:wrap;
-            gap:8px;
+        /* Image */
+        .room-img {
+            width: 100%; height: 160px; object-fit: cover;
+            border-bottom: 1px solid var(--border);
         }
-        .rc-view{font-size:12.5px;color:var(--accent-tx);text-decoration:none;font-weight:500;}
-        .rc-view:hover{text-decoration:underline;}
-        .rc-actions{display:flex;gap:5px;}
-        .rc-btn{
-            padding:4px 10px;border-radius:6px;font-size:12px;font-weight:500;
-            cursor:pointer;text-decoration:none;transition:background .12s;
-            border:1px solid var(--border-md);
+        .room-img-placeholder {
+            width: 100%; height: 160px;
+            background: var(--surface-2);
+            display: flex; align-items: center; justify-content: center;
+            border-bottom: 1px solid var(--border);
+            color: var(--text-3);
         }
-        .rc-btn.edit{background:var(--surface);color:var(--text-2);}
-        .rc-btn.edit:hover{background:var(--surface-2);color:var(--text);}
-        .rc-btn.archive{
-            background:var(--amber-bg);
-            color:var(--amber);
-            border-color:var(--border);
-        }
-        .rc-btn.archive:hover{
-            background:var(--amber);
-            color:#fff;
-        }
-        .rc-btn.restore{
-            background:var(--green-bg);
-            color:var(--green);
-            border-color:var(--border);
-        }
-        .rc-btn.restore:hover{
-            background:var(--green);
-            color:#fff;
-        }
-        .rc-btn.request{
-            background:var(--green-bg);
-            color:var(--green);
-            border:1px solid var(--border);
-        }
-        .rc-btn.request:hover{
-            background:var(--green);
-            color:#fff;
-        }
-        .badge.archived {
-        background: var(--surface-2);
-        color: var(--text-3);
-        /* Empty */
-        .empty{
-            grid-column:1/-1;padding:64px 20px;text-align:center;
-            background:var(--surface);border:1px solid var(--border);
-            border-radius:var(--r2);
-        }
-        .empty svg{width:44px;height:44px;color:var(--text-3);margin:0 auto 14px;opacity:.35;}
-        .empty p{font-size:14px;color:var(--text-2);margin:0 0 16px;}
 
-        /* Pagination */
-        .paging{margin-top:24px;}
+        /* Body */
+        .room-body { padding: 16px; flex: 1; display: flex; flex-direction: column; }
+        .room-header {
+            display: flex; align-items: flex-start; justify-content: space-between;
+            margin-bottom: 12px;
+        }
+        .room-number {
+            font-size: 18px; font-weight: 700;
+            color: var(--text);
+            font-family: var(--mono);
+            letter-spacing: -.02em;
+        }
+        .room-type {
+            font-size: 11px; font-weight: 600;
+            padding: 3px 10px; border-radius: 99px;
+            background: var(--surface-2);
+            color: var(--text-3);
+            border: 1px solid var(--border);
+            text-transform: capitalize;
+        }
+        .room-status {
+            display: inline-block;
+            padding: 3px 10px; border-radius: 99px;
+            font-size: 12px; font-weight: 500;
+            margin-top: 8px;
+        }
+        .status-available { background: var(--green-bg); color: var(--green); }
+        .status-occupied  { background: var(--red-bg); color: var(--red); }
+        .status-maintenance { background: var(--amber-bg); color: var(--amber); }
+        .status-archived   { background: var(--surface-2); color: var(--text-3); }
+
+        .room-details {
+            display: flex; flex-direction: column; gap: 6px;
+            margin: 12px 0; flex: 1;
+        }
+        .room-detail-row {
+            display: flex; justify-content: space-between;
+            font-size: 13px;
+        }
+        .room-detail-label { color: var(--text-3); }
+        .room-detail-value { color: var(--text); font-weight: 500; }
+        .room-price {
+            font-size: 18px; font-weight: 700;
+            color: var(--accent-tx);
+            font-family: var(--mono);
+        }
+
+        .room-actions {
+            display: flex; gap: 8px; margin-top: 14px;
+            flex-wrap: wrap; align-items: center;
+        }
+        .btn-room {
+            display: inline-flex; align-items: center; gap: 6px;
+            padding: 5px 12px; border-radius: var(--r);
+            font-size: 12px; font-weight: 500;
+            text-decoration: none;
+            transition: background .12s, color .12s;
+            border: 1px solid var(--border);
+        }
+        .btn-room-view {
+            color: var(--accent-tx);
+            background: var(--surface-2);
+            border-color: var(--border);
+        }
+        .btn-room-view:hover {
+            background: var(--accent);
+            color: #fff;
+            border-color: var(--accent);
+        }
+        .btn-room-edit {
+            color: var(--text-2);
+            background: var(--surface);
+        }
+        .btn-room-edit:hover {
+            background: var(--surface-2);
+            color: var(--text);
+        }
+        .btn-room-request {
+            background: var(--green-bg);
+            color: var(--green);
+            border-color: var(--green);
+        }
+        .btn-room-request:hover {
+            background: var(--green);
+            color: #fff;
+        }
+        .btn-room-archive {
+            background: var(--amber-bg);
+            color: var(--amber);
+            border-color: var(--amber);
+        }
+        .btn-room-archive:hover {
+            background: var(--amber);
+            color: #fff;
+        }
+        .btn-room-restore {
+            background: var(--green-bg);
+            color: var(--green);
+            border-color: var(--green);
+        }
+        .btn-room-restore:hover {
+            background: var(--green);
+            color: #fff;
+        }
+
+        /* Empty state */
+        .empty-state {
+            grid-column: 1 / -1;
+            text-align: center;
+            padding: 60px 20px;
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: var(--r2);
+        }
+        .empty-state svg {
+            width: 48px; height: 48px; color: var(--text-3);
+            opacity: .4; margin-bottom: 16px;
+        }
+        .empty-state p {
+            font-size: 14px; color: var(--text-2);
+            margin: 0 0 16px;
+        }
+
+        /* ============================================
+           CENTER THE HOME LOGO IN THE NAVIGATION BAR
+           ============================================ */
+        /* Target the logo container inside the main nav (app-layout) */
+        nav .flex.shrink-0,
+        nav [x-data] .flex.shrink-0 {
+            position: absolute !important;
+            left: 50% !important;
+            transform: translateX(-50%) !important;
+        }
+        /* Ensure the nav's parent container allows absolute positioning */
+        nav > div.relative,
+        nav > .max-w-7xl,
+        nav > div:first-child {
+            position: relative !important;
+        }
+        /* Remove any conflicting margins */
+        nav .sm\:ml-0 {
+            margin-left: 0 !important;
+        }
+        /* Adjust the right-side (user menu) so it doesn't overlap */
+        nav .flex.items-center.gap-4,
+        nav .flex.items-center.space-x-4,
+        nav .flex.items-center.gap-2 {
+            margin-left: auto;
+        }
+        /* For responsive: keep logo centered and avoid overlapping on small screens */
+        @media (max-width: 640px) {
+            nav .flex.shrink-0 {
+                position: relative !important;
+                left: auto !important;
+                transform: none !important;
+                margin: 0 auto !important;
+            }
+            nav > div:first-child {
+                flex-wrap: wrap !important;
+            }
+        }
     </style>
 
+    {{-- Alerts --}}
     @if(session('success'))
-    <div class="alert-ok">
-        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
-        {{ session('success') }}
-    </div>
+        <div class="alert alert-success">
+            <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+            {{ session('success') }}
+        </div>
     @endif
-
     @if(session('error'))
-    <div class="alert-ok" style="background:var(--red-bg);color:var(--red);border-color:rgba(224,36,36,.2);">
-        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/></svg>
-        {{ session('error') }}
-    </div>
+        <div class="alert alert-error">
+            <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/></svg>
+            {{ session('error') }}
+        </div>
     @endif
 
-    <!-- Filters – Role‑based -->
+    {{-- Filters --}}
     <div class="filters">
         @if(auth()->user()->isAdmin() || auth()->user()->isStaff())
-            <a href="{{ route('rooms.index') }}" class="chip {{ !request('status') && !request('archived') ? 'on' : '' }}">All rooms</a>
+            <a href="{{ route('rooms.index') }}" class="chip {{ !request('status') && !request('archived') ? 'on' : '' }}">All</a>
             <a href="{{ route('rooms.index', ['status' => 'available']) }}" class="chip {{ request('status') === 'available' ? 'on' : '' }}">Available</a>
             <a href="{{ route('rooms.index', ['status' => 'occupied']) }}" class="chip {{ request('status') === 'occupied' ? 'on' : '' }}">Occupied</a>
             <a href="{{ route('rooms.index', ['status' => 'maintenance']) }}" class="chip {{ request('status') === 'maintenance' ? 'on' : '' }}">Maintenance</a>
             @if(auth()->user()->isAdmin())
-                <a href="{{ route('rooms.index', ['archived' => 1]) }}" class="chip {{ request('archived') == 1 ? 'on' : '' }}">Archived Rooms</a>
+                <a href="{{ route('rooms.index', ['archived' => 1]) }}" class="chip {{ request('archived') == 1 ? 'on' : '' }}">Archived</a>
             @endif
         @else
-            <!-- Students see only available rooms, so no filter needed -->
             <span class="chip on">Available rooms</span>
         @endif
     </div>
 
-    <!-- Grid -->
-    <div class="rg">
+    {{-- Grid --}}
+    <div class="room-grid">
         @forelse($rooms as $room)
-        <div class="rc">
-            <!-- ========== IMAGE THUMBNAIL ========== -->
-            @if($room->image)
-                <img src="{{ asset('storage/' . $room->image) }}" alt="Room {{ $room->room_number }}" style="width:100%; height:140px; object-fit:cover; border-bottom:1px solid var(--border);">
-            @else
-                <div style="width:100%; height:140px; background:var(--surface-2); display:flex; align-items:center; justify-content:center; border-bottom:1px solid var(--border);">
-                    <svg width="32" height="32" fill="none" stroke="currentColor" viewBox="0 0 24 24" style="color:var(--text-3);"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
-                </div>
-            @endif
-            <!-- =================================== -->
-            <div class="rc-head">
-                <div>
-                    <div class="rc-num">{{ $room->room_number }}</div>
-                    <div style="margin-top:5px;"><span class="badge {{ $room->status }}">{{ ucfirst($room->status) }}</span></div>
-                </div>
-                <span class="rc-type">{{ ucfirst($room->type) }}</span>
-            </div>
-            <div class="rc-body">
-                <div class="rc-row">
-                    <span class="rc-lbl">Capacity</span>
-                    <span class="rc-val">{{ $room->capacity }} person{{ $room->capacity > 1 ? 's' : '' }}</span>
-                </div>
-                <div class="rc-row">
-                    <span class="rc-lbl">Monthly rate</span>
-                    <span class="rc-price">₱{{ number_format($room->price_per_month, 0) }}</span>
-                </div>
-                <div class="rc-row">
-                    <span class="rc-lbl">Added</span>
-                    <span class="rc-val">{{ $room->created_at->diffForHumans() }}</span>
-                </div>
-            </div>
-            <div class="rc-foot">
-                <a href="{{ route('rooms.show', $room) }}" class="rc-view">View details →</a>
-                
-                @auth
-                    @if(auth()->user()->isResident() && $room->status === 'available' && !$room->archived)
-                        <form method="POST" action="{{ route('rooms.request', $room) }}" class="inline">
-                            @csrf
-                            <button type="submit" class="rc-btn request">Request this room</button>
-                        </form>
-                    @endif
-                @endauth
+            <div class="room-card">
+                @if($room->image)
+                    <img src="{{ asset('storage/' . $room->image) }}" alt="Room {{ $room->room_number }}" class="room-img">
+                @else
+                    <div class="room-img-placeholder">
+                        <svg width="32" height="32" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
+                    </div>
+                @endif
 
-                @if(auth()->user()->isAdmin())
-                <div class="rc-actions">
-                    <a href="{{ route('rooms.edit', $room) }}" class="rc-btn edit">Edit</a>
-                    @if($room->archived)
-                        <form method="POST" action="{{ route('rooms.restore', $room) }}" class="inline" onsubmit="return confirm('Restore this room? It will become visible again.');">
-                            @csrf @method('PATCH')
-                            <button type="submit" class="rc-btn restore">Restore</button>
-                        </form>
-                    @else
-                        <form method="POST" action="{{ route('rooms.archive', $room) }}" class="inline" onsubmit="return confirm('Archive this room? It will be hidden from students and staff.');">
-                            @csrf @method('PATCH')
-                            <button type="submit" class="rc-btn archive">Archive</button>
-                        </form>
-                    @endif
+                <div class="room-body">
+                    <div class="room-header">
+                        <div>
+                            <div class="room-number">{{ $room->room_number }}</div>
+                            <span class="room-status status-{{ $room->status }}">
+                                {{ ucfirst($room->status) }}
+                            </span>
+                        </div>
+                        <span class="room-type">{{ ucfirst($room->type) }}</span>
+                    </div>
+
+                    <div class="room-details">
+                        <div class="room-detail-row">
+                            <span class="room-detail-label">Capacity</span>
+                            <span class="room-detail-value">1 person</span>
+                        </div>
+                        <div class="room-detail-row">
+                            <span class="room-detail-label">Price</span>
+                            <span class="room-price">₱{{ number_format($room->price_per_month, 0) }}</span>
+                        </div>
+                        <div class="room-detail-row">
+                            <span class="room-detail-label">Added</span>
+                            <span class="room-detail-value">{{ $room->created_at->diffForHumans() }}</span>
+                        </div>
+                    </div>
+
+                    <div class="room-actions">
+                        <a href="{{ route('rooms.show', $room) }}" class="btn-room btn-room-view">
+                            View details →
+                        </a>
+
+                        @auth
+                            @if(auth()->user()->isResident() && $room->status === 'available' && !$room->archived)
+                                <form method="POST" action="{{ route('rooms.request', $room) }}" style="display:inline;">
+                                    @csrf
+                                    <button type="submit" class="btn-room btn-room-request">Request</button>
+                                </form>
+                            @endif
+                        @endauth
+
+                        @if(auth()->user()->isAdmin())
+                            <a href="{{ route('rooms.edit', $room) }}" class="btn-room btn-room-edit">Edit</a>
+                            @if($room->archived)
+                                <form method="POST" action="{{ route('rooms.restore', $room) }}" style="display:inline;"
+                                      onsubmit="return confirm('Restore this room?');">
+                                    @csrf @method('PATCH')
+                                    <button type="submit" class="btn-room btn-room-restore">Restore</button>
+                                </form>
+                            @else
+                                <form method="POST" action="{{ route('rooms.archive', $room) }}" style="display:inline;"
+                                      onsubmit="return confirm('Archive this room?');">
+                                    @csrf @method('PATCH')
+                                    <button type="submit" class="btn-room btn-room-archive">Archive</button>
+                                </form>
+                            @endif
+                        @endif
+                    </div>
                 </div>
+            </div>
+        @empty
+            <div class="empty-state">
+                <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M3 10.5L12 3l9 7.5V20a1 1 0 01-1 1H5a1 1 0 01-1-1v-9.5z"/></svg>
+                <p>No rooms found.</p>
+                @if(auth()->user()->isAdmin() && !request('archived'))
+                    <a href="{{ route('rooms.create') }}" style="display:inline-flex; align-items:center; gap:6px; padding:8px 16px; background:var(--accent); color:#fff; border-radius:var(--r); font-size:13px; font-weight:500; text-decoration:none;">
+                        + Add your first room
+                    </a>
                 @endif
             </div>
-        </div>
-        @empty
-        <div class="empty">
-            <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M3 10.5L12 3l9 7.5V20a1 1 0 01-1 1H5a1 1 0 01-1-1v-9.5z"/></svg>
-            @if(request('status') === 'maintenance')
-                <p>No rooms are currently under maintenance.</p>
-            @elseif(request('archived') && auth()->user()->isAdmin())
-                <p>No archived rooms found. You can archive rooms from the "All rooms" view.</p>
-            @elseif(auth()->user()->isResident())
-                <p>No available rooms at the moment. Please check back later.</p>
-            @else
-                <p>No rooms found{{ request('status') ? ' with status "'.request('status').'"' : '' }}.</p>
-            @endif
-            @if(auth()->user()->isAdmin() && !request('archived'))
-                <a href="{{ route('rooms.create') }}" style="display:inline-flex;align-items:center;gap:6px;padding:8px 16px;background:var(--accent);color:#fff;border-radius:var(--r);font-size:13px;font-weight:500;text-decoration:none;">
-                    + Add your first room
-                </a>
-            @endif
-        </div>
         @endforelse
     </div>
 
-    <div class="paging">{{ $rooms->links() }}</div>
+    {{-- Pagination --}}
+    {{ $rooms->links('components.pagination') }}
 </x-app-layout>
