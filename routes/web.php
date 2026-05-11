@@ -2,7 +2,6 @@
 
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\RoomController;
-use App\Http\Controllers\BuildingController;
 use App\Http\Controllers\RoomApplicationController;
 use App\Http\Controllers\AllocationController;
 use App\Http\Controllers\MaintenanceRequestController;
@@ -57,9 +56,6 @@ Route::middleware(['auth'])->group(function () {
 
     // Show route – MUST be LAST to avoid catching 'create' or 'edit' as {room}
     Route::get('/rooms/{room}', [RoomController::class, 'show'])->name('rooms.show');
-
-    // ==================== BUILDINGS ====================
-    Route::resource('buildings', BuildingController::class)->middleware('admin');
 
     // ==================== ROOM APPLICATIONS ====================
     Route::resource('applications', RoomApplicationController::class)->except(['edit', 'update']);

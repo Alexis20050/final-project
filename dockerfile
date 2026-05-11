@@ -47,33 +47,30 @@ COPY . .
 # Install Node dependencies and build frontend assets
 RUN npm install && npm run build
 
-# Prepare directories and fix permissions
+# Prepare directories and fix permissions — ADDED storage/logs
 RUN mkdir -p storage/framework/cache storage/framework/sessions \
-    storage/framework/views bootstrap/cache public/uploads \
+    storage/framework/views storage/logs bootstrap/cache public/uploads \
     && chown -R www-data:www-data storage bootstrap/cache public/uploads \
     && chmod -R 775 storage bootstrap/cache public/uploads
 
 # Create a comprehensive entrypoint script that handles everything at runtime
 RUN printf '#!/bin/bash\n\
 set -e\n\
-# Wait for database to be ready (optional, uncomment if needed)\n\
-# echo "Waiting for database..."\n\
-# while ! nc -z $DB_HOST $DB_PORT; do sleep 1; done\n\
 \n\
-# Generate app key if not already set in .env or environment\n\
+# Generate app key if not already set\n\
 if [ -z "$APP_KEY" ]; then\n\
     echo "No APP_KEY found, generating..."\n\
     php artisan key:generate --force --no-interaction\n\
 fi\n\
 \n\
-# Run Laravel optimizations (creates config/route/view caches)\n\
+# Run migrations FIRST (no || true, so we see failures)\n\
+php artisan migrate --force\n\
+\n\
+# Run Laravel optimizations (after migrations, schema is complete)\n\
 php artisan optimize\n\
 \n\
 # Create storage symlink\n\
-php artisan storage:link || true\n\
-\n\
-# Run migrations\n\
-php artisan migrate --force || true\n\
+php artisan storage:link\n\
 \n\
 # Start Apache\n\
 apache2-foreground\n' > /usr/local/bin/entrypoint.sh \
