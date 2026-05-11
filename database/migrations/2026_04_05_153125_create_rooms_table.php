@@ -8,7 +8,6 @@ return new class extends Migration
 {
     public function up(): void
     {
-        // Only create if the table does not already exist
         if (!Schema::hasTable('rooms')) {
             Schema::create('rooms', function (Blueprint $table) {
                 $table->id();
