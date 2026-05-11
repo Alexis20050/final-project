@@ -8,18 +8,21 @@ return new class extends Migration
 {
     public function up(): void
     {
-        Schema::create('rooms', function (Blueprint $table) {
-            $table->id();
-            $table->string('room_number')->unique();
-            $table->string('type')->default('single');       // always single
-            $table->integer('capacity')->default(1);          // always 1
-            $table->decimal('price_per_month', 8, 2);
-            $table->string('image')->nullable();
-            $table->enum('status', ['available', 'occupied', 'maintenance', 'archived'])
-                  ->default('available');
-            $table->boolean('archived')->default(false);
-            $table->timestamps();
-        });
+        // Only create if the table does not already exist
+        if (!Schema::hasTable('rooms')) {
+            Schema::create('rooms', function (Blueprint $table) {
+                $table->id();
+                $table->string('room_number')->unique();
+                $table->string('type')->default('single');
+                $table->integer('capacity')->default(1);
+                $table->decimal('price_per_month', 8, 2);
+                $table->string('image')->nullable();
+                $table->enum('status', ['available', 'occupied', 'maintenance', 'archived'])
+                      ->default('available');
+                $table->boolean('archived')->default(false);
+                $table->timestamps();
+            });
+        }
     }
 
     public function down(): void
