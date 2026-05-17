@@ -1,10 +1,10 @@
 <x-app-layout>
     <x-slot name="header">
-        <div class="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4">
+        <div class="flex justify-between items-center">
             <h2 class="page-header-title">User Management</h2>
-            <div class="text-sm text-gray-500 dark:text-gray-400" x-text="'Total: ' + totalUsers + ' residents'">
+            <span class="text-sm text-gray-500 dark:text-gray-400" x-text="'Total: ' + totalUsers + ' residents'">
                 Total: {{ $users->total() }} residents
-            </div>
+            </span>
         </div>
     </x-slot>
 
@@ -12,12 +12,9 @@
         .card {
             background: var(--surface);
             border: 1px solid var(--border);
-            border-radius: var(--r2);
+            border-radius: var(--r3);
             overflow: hidden;
-            transition: box-shadow 0.2s;
-        }
-        .card:hover {
-            box-shadow: var(--shadow);
+            box-shadow: 0 1px 4px rgba(0,0,0,.03);
         }
         .card-header {
             padding: 16px 20px;
@@ -44,7 +41,6 @@
         .search-input-wrapper {
             flex: 3;
             min-width: 200px;
-            position: relative;
         }
         .search-input {
             width: 100%;
@@ -55,7 +51,7 @@
             color: var(--text);
             font-size: 14px;
             outline: none;
-            transition: all 0.2s ease;
+            transition: border-color 0.2s;
         }
         .search-input:focus {
             border-color: var(--accent);
@@ -78,33 +74,26 @@
             color: #fff;
             border: none;
         }
-        .btn-search:hover {
-            background: var(--accent-dark);
-            transform: translateY(-1px);
-        }
+        .btn-search:hover { background: var(--accent-dark); transform: translateY(-1px); }
         .btn-clear {
             background: var(--surface-2);
             color: var(--text-2);
             border: 1px solid var(--border);
         }
-        .btn-clear:hover {
-            background: var(--surface);
-            color: var(--text);
-        }
+        .btn-clear:hover { background: var(--surface); color: var(--text); }
         .search-info {
             font-size: 12px;
             color: var(--text-3);
             margin-top: 8px;
         }
-        .table-responsive {
-            overflow-x: auto;
-        }
+
+        .table-responsive { overflow-x: auto; }
         .users-table {
             width: 100%;
             border-collapse: collapse;
         }
         .users-table th, .users-table td {
-            padding: 14px 16px;
+            padding: 12px 16px;
             text-align: left;
             border-bottom: 1px solid var(--border);
             vertical-align: middle;
@@ -116,13 +105,15 @@
             text-transform: uppercase;
             letter-spacing: 0.05em;
             background: var(--surface-2);
+            border-bottom: 2px solid var(--border);
         }
-        .users-table tr {
-            transition: background 0.15s;
-        }
-        .users-table tr:hover {
+        .users-table tbody tr:nth-child(even) {
             background: var(--surface-2);
         }
+        .users-table tbody tr:hover {
+            background: var(--surface-3);
+        }
+
         .badge-room {
             background: var(--accent-light);
             color: var(--accent);
@@ -171,9 +162,24 @@
             padding: 60px 20px;
             color: var(--text-3);
         }
+
+        /* Centered pagination bar */
         .paging {
             padding: 16px 20px;
             border-top: 1px solid var(--border);
+            background: var(--surface-2);
+            text-align: center;
+        }
+        .paging button {
+            margin: 0 4px;
+            padding: 4px 8px;
+            border: 1px solid var(--border);
+            background: var(--surface);
+            border-radius: 4px;
+            cursor: pointer;
+            transition: background 0.15s;
+        }
+        .paging button:hover {
             background: var(--surface-2);
         }
         .paging button.active {
@@ -181,19 +187,7 @@
             color: white;
             border-color: var(--accent);
         }
-        @media (max-width: 640px) {
-            .search-form {
-                flex-direction: column;
-                align-items: stretch;
-            }
-            .btn-search, .btn-clear {
-                justify-content: center;
-            }
-            .action-buttons {
-                flex-direction: column;
-                gap: 5px;
-            }
-        }
+
         .loading-indicator {
             display: inline-block;
             width: 20px;
@@ -279,7 +273,6 @@
                     <tr>
                         <th>Name</th>
                         <th>Email</th>
-                        {{-- Student ID and Phone removed --}}
                         <th>Current Room</th>
                         <th>Actions</th>
                     </tr>
@@ -292,7 +285,6 @@
                                 <div class="text-xs text-gray-500 dark:text-gray-400" x-text="'Joined ' + new Date(user.created_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })"></div>
                             </td>
                             <td x-text="user.email"></td>
-                            {{-- Removed Student ID and Phone cells --}}
                             <td>
                                 <span x-show="user.active_allocation && user.active_allocation.room" class="badge-room" x-text="'Room ' + user.active_allocation.room.room_number"></span>
                                 <span x-show="!user.active_allocation || !user.active_allocation.room" class="badge-none">Not allocated</span>
@@ -308,10 +300,9 @@
                         </tr>
                     </template>
                     <tr x-show="users.length === 0 && !loading">
-                        {{-- colspan changed from 6 to 4 because we removed two columns --}}
                         <td colspan="4" class="empty-state">
                             <span x-show="searchTerm">No residents found matching <strong x-text="searchTerm"></strong>.</span>
-                            <span x-show="!searchTerm">No residents found. <br><span class="text-sm">New residents will appear here after registration.</span></span>
+                            <span x-show="!searchTerm">No residents found.</span>
                             <div class="mt-2" x-show="searchTerm">
                                 <button @click="clearSearch()" class="btn-clear" style="display:inline-flex;">Clear search</button>
                             </div>
@@ -329,10 +320,10 @@
             </table>
         </div>
 
-        <!-- Pagination -->
+        <!-- Pagination - now perfectly centered -->
         <div class="paging" x-show="pagination.last_page > 1 && !loading">
             <template x-for="link in pagination.links" :key="link.label">
-                <button @click="fetchPage(link.url)" x-html="link.label" :class="{'active': link.active}" style="margin:0 4px; padding:4px 8px; border:1px solid var(--border); background:var(--surface); border-radius:4px; cursor:pointer;"></button>
+                <button @click="fetchPage(link.url)" x-html="link.label" :class="{'active': link.active}"></button>
             </template>
         </div>
     </div>
