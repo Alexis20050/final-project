@@ -30,7 +30,7 @@ class AdminUserController extends Controller
                 $q->with('room');
             }])
             ->latest()
-            ->paginate(15)
+            ->paginate(10)
             ->appends(['search' => $request->search]); // preserve search term in pagination
         
         // If the request expects JSON (AJAX live search)

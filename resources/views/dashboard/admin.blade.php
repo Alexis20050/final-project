@@ -44,9 +44,9 @@
         }
         .hero-role-dot { width:6px;height:6px;border-radius:50%;background:#60A5FA; }
 
-        /* ── Stats grid ── */
+        /* ── Stats grid (now 5 columns) ── */
         .stats-grid {
-            display:grid;grid-template-columns:repeat(4,minmax(0,1fr));
+            display:grid;grid-template-columns:repeat(5,minmax(0,1fr));
             gap:14px;margin-bottom:24px;
         }
         @media(max-width:900px){.stats-grid{grid-template-columns:repeat(2,1fr);}}
@@ -173,7 +173,7 @@
     </div>
     @endif
 
-    <!-- Stats -->
+    <!-- Stats Grid (5 cards) -->
     <div class="stats-grid">
         <div class="stat">
             <div class="stat-top">
@@ -210,6 +210,18 @@
                 </div>
             </div>
             <div class="stat-footer">Under service</div>
+        </div>
+        {{-- Total Residents (NEW) --}}
+        <div class="stat">
+            <div class="stat-top">
+                <div><div class="stat-label">Total Residents</div><div class="stat-val sv-blue">{{ $totalResidents }}</div></div>
+                <div class="stat-icon si-blue">
+                    <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.75" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z"/>
+                    </svg>
+                </div>
+            </div>
+            <div class="stat-footer">Registered residents</div>
         </div>
     </div>
 

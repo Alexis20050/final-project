@@ -6,6 +6,7 @@ use App\Models\Room;
 use App\Models\RoomApplication;
 use App\Models\Allocation;
 use App\Models\MaintenanceRequest;
+use App\Models\User;
 use Illuminate\Http\Request;
 
 class DashboardController extends Controller
@@ -22,19 +23,22 @@ class DashboardController extends Controller
             $maintenance = Room::where('status', 'maintenance')->count();
             $rate = $total > 0 ? round(($occupied / $total) * 100) : 0;
 
+            // ✅ Total Residents
+            $totalResidents = User::where('role', 'resident')->count();
+
             $pendingApplications = RoomApplication::where('status', 'pending')->count();
             $pendingMaintenance = MaintenanceRequest::where('status', 'pending')->count();
             $recentAllocations = Allocation::with('user', 'room')->latest()->take(5)->get();
 
             return view('dashboard.admin', compact(
                 'total', 'available', 'occupied', 'maintenance', 'rate',
-                'pendingApplications', 'pendingMaintenance', 'recentAllocations'
+                'pendingApplications', 'pendingMaintenance', 'recentAllocations',
+                'totalResidents'
             ));
         }
 
         // -------------------- STAFF DASHBOARD --------------------
         if ($user->isStaff()) {
-            // Fetch paginated requests (assigned to this staff OR unassigned)
             $assignedRequests = MaintenanceRequest::with('room')
                 ->where(function ($query) use ($user) {
                     $query->where('assigned_to', $user->id)
@@ -43,10 +47,6 @@ class DashboardController extends Controller
                 ->where('status', '!=', 'resolved')
                 ->paginate(15);
 
-            // Stats from the paginated collection (only current page – but that's fine for dashboard stats)
-            // If you want totals across all pages, you'd need separate count queries.
-            // However, for a dashboard, showing counts of pending/unassigned in the current page is acceptable.
-            // To get accurate totals across all records, use separate count queries.
             $pendingCount = MaintenanceRequest::where(function ($q) use ($user) {
                     $q->where('assigned_to', $user->id)->orWhereNull('assigned_to');
                 })->where('status', 'pending')->count();
