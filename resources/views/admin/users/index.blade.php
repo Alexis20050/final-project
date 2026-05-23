@@ -2,8 +2,7 @@
     <x-slot name="header">
         <div class="flex justify-between items-center">
             <h2 class="page-header-title">User Management</h2>
-            <span class="text-sm text-gray-500 dark:text-gray-400" x-text="'Total: ' + totalUsers + ' residents'">
-                Total: {{ $users->total() }} residents
+            <span class="text-sm text-gray-500 dark:text-gray-400">
             </span>
         </div>
     </x-slot>
@@ -162,169 +161,91 @@
             padding: 60px 20px;
             color: var(--text-3);
         }
-
-        /* Centered pagination bar */
-        .paging {
-            padding: 16px 20px;
-            border-top: 1px solid var(--border);
-            background: var(--surface-2);
-            text-align: center;
-        }
-        .paging button {
-            margin: 0 4px;
-            padding: 4px 8px;
-            border: 1px solid var(--border);
-            background: var(--surface);
-            border-radius: 4px;
-            cursor: pointer;
-            transition: background 0.15s;
-        }
-        .paging button:hover {
-            background: var(--surface-2);
-        }
-        .paging button.active {
-            background: var(--accent);
-            color: white;
-            border-color: var(--accent);
-        }
-
-        .loading-indicator {
-            display: inline-block;
-            width: 20px;
-            height: 20px;
-            border: 2px solid var(--border);
-            border-radius: 50%;
-            border-top-color: var(--accent);
-            animation: spin 0.6s linear infinite;
-        }
-        @keyframes spin {
-            to { transform: rotate(360deg); }
-        }
     </style>
 
-    <div class="card" x-data="{
-        searchTerm: '{{ request('search') }}',
-        users: @js($users->items()),
-        pagination: @js($users->toArray()),
-        totalUsers: {{ $users->total() }},
-        loading: false,
-        debounceTimer: null,
-        async fetchUsers(url = null) {
-            this.loading = true;
-            let fetchUrl = url || `{{ route('admin.users.index') }}?search=${encodeURIComponent(this.searchTerm)}&ajax=1`;
-            try {
-                const res = await fetch(fetchUrl, { headers: { 'X-Requested-With': 'XMLHttpRequest' } });
-                const data = await res.json();
-                this.users = data.data;
-                this.pagination = data;
-                this.totalUsers = data.total;
-            } catch (err) {
-                console.error(err);
-            } finally {
-                this.loading = false;
-            }
-        },
-        updateSearch() {
-            clearTimeout(this.debounceTimer);
-            this.debounceTimer = setTimeout(() => {
-                this.fetchUsers();
-            }, 300);
-        },
-        clearSearch() {
-            this.searchTerm = '';
-            this.fetchUsers();
-        },
-        fetchPage(url) {
-            if (url) this.fetchUsers(url);
-        }
-    }" x-init="$watch('searchTerm', () => updateSearch())">
-
+    <div class="card">
         <div class="card-header">
             <h3>All Resident Users</h3>
         </div>
 
-        <!-- Search Section -->
+        <!-- Search Section (GET form) -->
         <div class="search-section">
-            <div class="search-form">
+            <form method="GET" action="{{ route('admin.users.index') }}" class="search-form">
                 <div class="search-input-wrapper">
-                    <input type="text" placeholder="Search by name or email..." 
-                           x-model="searchTerm" class="search-input" :class="{ 'loading': loading }">
+                    <input type="text" name="search" placeholder="Search by name or email..." 
+                           value="{{ request('search') }}" class="search-input">
                 </div>
-                <button type="button" @click="fetchUsers()" class="btn-search">
+                <button type="submit" class="btn-search">
                     <svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
                     Search
                 </button>
-                <button type="button" @click="clearSearch()" class="btn-clear" x-show="searchTerm">
-                    <svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
-                    Clear
-                </button>
-            </div>
-            <div class="search-info" x-show="searchTerm && !loading">
-                Showing results for: <strong x-text="searchTerm"></strong>
-            </div>
-            <div class="search-info" x-show="loading" style="color: var(--accent); display: flex; gap: 6px; align-items: center;">
-                <div class="loading-indicator"></div> Searching...
-            </div>
+                @if(request('search'))
+                    <a href="{{ route('admin.users.index') }}" class="btn-clear">
+                        <svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+                        Clear
+                    </a>
+                @endif
+            </form>
+            @if(request('search'))
+                <div class="search-info">
+                    Showing results for: <strong>{{ request('search') }}</strong>
+                </div>
+            @endif
         </div>
 
         <div class="table-responsive">
-            <table class="users-table">
-                <thead>
-                    <tr>
-                        <th>Name</th>
-                        <th>Email</th>
-                        <th>Current Room</th>
-                        <th>Actions</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    <template x-for="user in users" :key="user.id">
+            @if($users->count() > 0)
+                <table class="users-table">
+                    <thead>
                         <tr>
-                            <td>
-                                <div class="font-medium" x-text="user.name"></div>
-                                <div class="text-xs text-gray-500 dark:text-gray-400" x-text="'Joined ' + new Date(user.created_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })"></div>
-                            </td>
-                            <td x-text="user.email"></td>
-                            <td>
-                                <span x-show="user.active_allocation && user.active_allocation.room" class="badge-room" x-text="'Room ' + user.active_allocation.room.room_number"></span>
-                                <span x-show="!user.active_allocation || !user.active_allocation.room" class="badge-none">Not allocated</span>
-                            </td>
-                            <td>
-                                <div class="action-buttons">
-                                    <a :href="'{{ url('admin/users') }}/' + user.id" class="btn-sm btn-view">
-                                        <svg width="12" height="12" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/></svg>
-                                        View
-                                    </a>
-                                </div>
-                            </td>
+                            <th>Name</th>
+                            <th>Email</th>
+                            <th>Current Room</th>
+                            <th>Actions</th>
                         </tr>
-                    </template>
-                    <tr x-show="users.length === 0 && !loading">
-                        <td colspan="4" class="empty-state">
-                            <span x-show="searchTerm">No residents found matching <strong x-text="searchTerm"></strong>.</span>
-                            <span x-show="!searchTerm">No residents found.</span>
-                            <div class="mt-2" x-show="searchTerm">
-                                <button @click="clearSearch()" class="btn-clear" style="display:inline-flex;">Clear search</button>
-                            </div>
-                        </td>
-                    </tr>
-                    <tr x-show="loading">
-                        <td colspan="4" class="empty-state">
-                            <div style="display:flex; justify-content:center; align-items:center; gap:8px;">
-                                <div class="loading-indicator"></div>
-                                <span>Loading...</span>
-                            </div>
-                        </td>
-                    </tr>
-                </tbody>
-            </table>
-        </div>
-
-        <!-- Pagination - now perfectly centered -->
-        <div class="paging" x-show="pagination.last_page > 1 && !loading">
-            <template x-for="link in pagination.links" :key="link.label">
-                <button @click="fetchPage(link.url)" x-html="link.label" :class="{'active': link.active}"></button>
-            </template>
+                    </thead>
+                    <tbody>
+                        @foreach($users as $user)
+                            <tr>
+                                <td>
+                                    <div class="font-medium">{{ $user->name }}</div>
+                                    <div class="text-xs text-gray-500 dark:text-gray-400">
+                                        Joined {{ $user->created_at->format('M d, Y') }}
+                                    </div>
+                                </td>
+                                <td>{{ $user->email }}</td>
+                                <td>
+                                    @if($user->activeAllocation && $user->activeAllocation->room)
+                                        <span class="badge-room">Room {{ $user->activeAllocation->room->room_number }}</span>
+                                    @else
+                                        <span class="badge-none">Not allocated</span>
+                                    @endif
+                                </td>
+                                <td>
+                                    <div class="action-buttons">
+                                        <a href="{{ route('admin.users.show', $user) }}" class="btn-sm btn-view">
+                                            <svg width="12" height="12" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/></svg>
+                                            View
+                                        </a>
+                                    </div>
+                                </td>
+                            </tr>
+                        @endforeach
+                    </tbody>
+                </table>
+                <div style="padding: 12px 20px; border-top: 1px solid var(--border);">
+                    {{ $users->links('components.pagination') }}
+                </div>
+            @else
+                <div class="empty-state">
+                    @if(request('search'))
+                        <p>No residents found matching "<strong>{{ request('search') }}</strong>".</p>
+                        <a href="{{ route('admin.users.index') }}" class="btn-clear" style="display:inline-flex; margin-top:12px;">Clear search</a>
+                    @else
+                        <p>No residents found.</p>
+                    @endif
+                </div>
+            @endif
         </div>
     </div>
 </x-app-layout>
